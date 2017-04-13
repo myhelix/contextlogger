@@ -50,7 +50,7 @@ func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
 			txn.AddAttribute(k, v)
 		}
 	} else {
-		p.Error(ctx, true, errors.New("Attempted to record metric in context without NewRelic transaction"))
+		log.FromContext(ctx).ErrorReport(errors.New("Attempted to record metric in context without NewRelic transaction"))
 	}
 	p.nextProvider.Record(ctx, metrics)
 }

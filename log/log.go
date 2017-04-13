@@ -56,10 +56,7 @@ type ContextLogger interface {
 	Record(metrics Metrics)
 	RecordEvent(eventName string, metrics Metrics)
 
-	// Add data to a log message; may be chained. Passing Loggers around explicitly is usually not
-	// the right thing -- particularly in the case of errors, error-associated data should be
-	// collected by the merry error as it passes up the callstack. One place where these do work
-	// well non-locally is attached to a Context.
+	// Add log data to a context to be used with future log messages
 	WithField(key string, val interface{}) ContextLogger
 	WithFields(fields Fields) ContextLogger
 }
