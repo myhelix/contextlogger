@@ -41,7 +41,23 @@ using FromContext below.
 */
 type ContextLogger interface {
 	context.Context
+	ComposableLogger
+}
 
+/*
+This can be combined with an object that already supplies context.Context, without conflict,
+to create a ContextLogger; it's not really intended to be used standalone, and in most cases
+you probably want to include ContextLogger rather than this in other interfaces/structs.
+
+In particular, if you are composing this with another supplier of Context, you need to keep in mind
+that a ContextLogger using the implementation in this file won't have access to your Context that
+lives next to it. So usually what you would want to do instead is use an interface to mask out the
+Context part of the ContextLogger's neighbor, then derive the ContextLogger instance from the
+source object that you've masked the context out of for composition.
+
+TODO: show example of what I'm talking about
+*/
+type ComposableLogger interface {
 	LogProvider() providers.LogProvider
 
 	/* Methods passed through to LogProvider with added context */
@@ -61,69 +77,51 @@ type ContextLogger interface {
 	WithFields(fields Fields) ContextLogger
 }
 
-/* This can be combined with an object that already supplies context.Context, without conflict,
-to create a ContextLogger */
-type ComposableLogger interface {
-	LogProvider() providers.LogProvider
-	ErrorReport(args ...interface{})
-	Error(args ...interface{})
-	WarnReport(args ...interface{})
-	Warn(args ...interface{})
-	InfoReport(args ...interface{})
-	Info(args ...interface{})
-	Debug(args ...interface{})
-	DebugReport(args ...interface{})
-	Record(metrics Metrics)
-	RecordEvent(eventName string, metrics Metrics)
-	WithField(key string, val interface{}) ContextLogger
-	WithFields(fields Fields) ContextLogger
-}
-
-type composed struct {
+type contextLogger struct {
 	context.Context
 	provider providers.LogProvider
 }
 
-func (c composed) LogProvider() providers.LogProvider {
+func (c contextLogger) LogProvider() providers.LogProvider {
 	return c.provider
 }
-func (c composed) ErrorReport(args ...interface{}) {
+func (c contextLogger) ErrorReport(args ...interface{}) {
 	c.provider.Error(c.Context, true, args...)
 }
-func (c composed) Error(args ...interface{}) {
+func (c contextLogger) Error(args ...interface{}) {
 	c.provider.Error(c.Context, false, args...)
 }
-func (c composed) WarnReport(args ...interface{}) {
+func (c contextLogger) WarnReport(args ...interface{}) {
 	c.provider.Warn(c.Context, true, args...)
 }
-func (c composed) Warn(args ...interface{}) {
+func (c contextLogger) Warn(args ...interface{}) {
 	c.provider.Warn(c.Context, false, args...)
 }
-func (c composed) InfoReport(args ...interface{}) {
+func (c contextLogger) InfoReport(args ...interface{}) {
 	c.provider.Info(c.Context, true, args...)
 }
-func (c composed) Info(args ...interface{}) {
+func (c contextLogger) Info(args ...interface{}) {
 	c.provider.Info(c.Context, false, args...)
 }
-func (c composed) DebugReport(args ...interface{}) {
+func (c contextLogger) DebugReport(args ...interface{}) {
 	c.provider.Debug(c.Context, true, args...)
 }
-func (c composed) Debug(args ...interface{}) {
+func (c contextLogger) Debug(args ...interface{}) {
 	c.provider.Debug(c.Context, false, args...)
 }
-func (c composed) Record(metrics Metrics) {
+func (c contextLogger) Record(metrics Metrics) {
 	c.provider.Record(c.Context, metrics)
 }
-func (c composed) RecordEvent(eventName string, metrics Metrics) {
+func (c contextLogger) RecordEvent(eventName string, metrics Metrics) {
 	c.provider.RecordEvent(c.Context, eventName, metrics)
 }
-func (c composed) WithField(key string, val interface{}) ContextLogger {
+func (c contextLogger) WithField(key string, val interface{}) ContextLogger {
 	fields := make(Fields)
 	fields[key] = val
 	return c.WithFields(fields)
 }
-func (c composed) WithFields(fields Fields) ContextLogger {
-	return composed{ContextWithFields(c.Context, fields), c.provider}
+func (c contextLogger) WithFields(fields Fields) ContextLogger {
+	return contextLogger{ContextWithFields(c.Context, fields), c.provider}
 }
 
 // This is mostly for use by LogProviders; adds fields to a raw context.Context
@@ -150,15 +148,15 @@ func FieldsFromContext(ctx context.Context) Fields {
 
 func FromContext(ctx context.Context) ContextLogger {
 	if provider, ok := ctx.Value(contextLogProviderKey{}).(providers.LogProvider); ok {
-		return composed{ctx, provider}
+		return contextLogger{ctx, provider}
 	} else {
-		return composed{ctx, defaultProvider}
+		return contextLogger{ctx, defaultProvider}
 	}
 }
 
 func FromContextAndProvider(ctx context.Context, provider providers.LogProvider) ContextLogger {
 	newContext := context.WithValue(ctx, contextLogProviderKey{}, provider)
-	return composed{newContext, provider}
+	return contextLogger{newContext, provider}
 }
 
 func BackgroundContext() ContextLogger {
