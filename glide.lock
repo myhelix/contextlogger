@@ -1,5 +1,5 @@
 hash: dd81cbc48c540e9398470180c6509780b447987a7adc24a8276a7efe793bd3b1
-updated: 2017-04-13T14:15:33.318704673-07:00
+updated: 2017-04-14T14:25:09.969905621-07:00
 imports:
 - name: github.com/ansel1/merry
   version: 5d27db058b2209512885615d6b5d96df9569d0c9
@@ -18,7 +18,23 @@ imports:
 - name: github.com/Sirupsen/logrus
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: golang.org/x/sys
-  version: 3dff6e19a5ae10f494290490e768d1e32e35c2fa
+  version: 7a56174f0086b32866ebd746a794417edbc678a1
   subpackages:
   - unix
-testImports: []
+testImports:
+- name: github.com/onsi/gomega
+  version: e85f63af4302dc0e4277c6008ecf803f1d80e4f0
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/oraclematcher
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types
+- name: gopkg.in/yaml.v2
+  version: f7716cbe52baa25d2e9b0d0da546fcf909fc16b4
