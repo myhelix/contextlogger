@@ -18,7 +18,7 @@ import (
 var output *bytes.Buffer
 var testProvider providers.LogProvider
 
-func setup(t *testing.T, config Config) {
+func setup(t *testing.T) {
 	RegisterTestingT(t)
 
 	output = new(bytes.Buffer)
@@ -31,19 +31,19 @@ func setup(t *testing.T, config Config) {
 		},
 	})
 	Expect(err).To(BeNil())
-	testProvider, err = LogProvider(outputProvider, config)
+	testProvider, err = LogProvider(outputProvider)
 	Expect(err).To(BeNil())
 }
 
 func TestValueExtraction(t *testing.T) {
-	setup(t, Config{})
+	setup(t)
 
 	testProvider.Info(context.Background(), false, merry.New("it broke").WithValue("how", "badly"))
 	Expect(output.String()).To(MatchRegexp(`time=sometime level=info msg="it broke" how=badly`))
 }
 
 func TestMerryTraceback(t *testing.T) {
-	setup(t, Config{})
+	setup(t)
 
 	err := merry.New("it broke").WithValue("how", "badly")
 
@@ -60,7 +60,7 @@ func TestMerryTraceback(t *testing.T) {
 }
 
 func TestErrorTraceback(t *testing.T) {
-	setup(t, Config{})
+	setup(t)
 
 	err := errors.New("it broke")
 
@@ -78,7 +78,7 @@ func TestErrorTraceback(t *testing.T) {
 
 /* If you mix an error with other crap, you lose the good metadata */
 func TestErrorMisc(t *testing.T) {
-	setup(t, Config{})
+	setup(t)
 
 	err := merry.New("it broke").WithValue("how", "badly")
 
