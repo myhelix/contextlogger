@@ -32,6 +32,7 @@ func init() {
 /* Keys for Context Values */
 type contextLogProviderKey struct{}
 type contextLogFieldsKey struct{}
+type contextStackKey struct{}
 
 /*
 ContextLoggers are designed to be passed around for convenience within a given project; APIs
@@ -144,6 +145,17 @@ func FieldsFromContext(ctx context.Context) Fields {
 		return fields
 	}
 	return make(Fields)
+}
+
+func ContextWithStack(ctx context.Context, stack []uintptr) context.Context {
+	return context.WithValue(ctx, contextStackKey{}, stack)
+}
+
+func StackFromContext(ctx context.Context) []uintptr {
+	if stack, ok := ctx.Value(contextStackKey{}).([]uintptr); ok {
+		return stack
+	}
+	return nil
 }
 
 func FromContext(ctx context.Context) ContextLogger {

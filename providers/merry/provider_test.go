@@ -71,7 +71,7 @@ func TestErrorTraceback(t *testing.T) {
 
 	testProvider.Error(context.Background(), false, err)
 	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" ~stackTrace=".*myhelix/contextlogger/providers/merry/provider.go:.*
-.*provider.extractContext: fields\["~stackTrace"\] = merry.Stacktrace\(merry.Wrap\(err\)\).*
+.*provider.extractContext: wrapped := merry.Wrap\(err\).*
 .*
 .*
 .*

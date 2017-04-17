@@ -9,7 +9,6 @@ is a merry error; otherwise it generates a new one based on the reporting callst
 package rollbar
 
 import (
-	"github.com/ansel1/merry"
 	goerr "github.com/go-errors/errors"
 	"github.com/myhelix/rollbar"
 
@@ -20,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 )
 
 type provider struct {
@@ -59,15 +59,19 @@ func listOfOneError(errs []interface{}) error {
 	return nil
 }
 
-func consolidateErrsForRollbar(errs []interface{}) (err error, stack rollbar.Stack, fields []*rollbar.Field) {
+func consolidateErrs(ctx context.Context, errs []interface{}) (err error, stack rollbar.Stack) {
 	err = listOfOneError(errs)
 	if err == nil {
 		// What was passed in wasn't an error, but we need an error
-		err = merry.New(fmt.Sprint(errs...))
+		err = errors.New(fmt.Sprint(errs...))
 	}
-	// We need a stack here; so wrap the error if it wasn't already
-	mStack := merry.Stack(merry.Wrap(err))
-	for _, f := range mStack {
+	goStack := log.StackFromContext(ctx)
+	// If a stack wasn't saved in the context (e.g. by merry provider), then generate one
+	if goStack == nil {
+		goStack = make([]uintptr, 50)
+		runtime.Callers(1, goStack)
+	}
+	for _, f := range goStack {
 		sf := goerr.NewStackFrame(f)
 		stack = append(stack, rollbar.Frame{
 			Filename: rollbar.ShortenFilePath(sf.File),
@@ -75,34 +79,21 @@ func consolidateErrsForRollbar(errs []interface{}) (err error, stack rollbar.Sta
 			Line:     sf.LineNumber,
 		})
 	}
-
-	vals := merry.Values(err)
-	stringMap := make(map[string]interface{})
-	for k, v := range vals {
-		if ks, ok := k.(string); ok {
-			if ks != "message" {
-				stringMap[ks] = v
-			}
-		}
-	}
-	fields = append(fields, &rollbar.Field{Name: "errorValues", Data: stringMap})
 	return
 }
 
 func (p provider) reportToRollbar(ctx context.Context, level string, errs ...interface{}) {
-	err, stack, fields := consolidateErrsForRollbar(errs)
+	err, stack := consolidateErrs(ctx, errs)
 
-	// Copy fields from the provider onto the error for reporting
-	logValues := make(map[string]interface{})
-	fields = append(fields, &rollbar.Field{Name: "logValues", Data: logValues})
-	for k, v := range log.FieldsFromContext(ctx) {
-		logValues[k] = v
+	logFields := &rollbar.Field{
+		Name: "logFields",
+		Data: log.FieldsFromContext(ctx),
 	}
 
 	if req := requestFrom(ctx); req != nil {
-		rollbar.RequestErrorWithStack(level, req, err, stack, fields...)
+		rollbar.RequestErrorWithStack(level, req, err, stack, logFields)
 	} else {
-		rollbar.ErrorWithStack(level, err, stack, fields...)
+		rollbar.ErrorWithStack(level, err, stack, logFields)
 	}
 }
 
