@@ -27,7 +27,7 @@ func LogProvider(nextProvider providers.LogProvider) (providers.LogProvider, mer
 }
 
 // Extract fields from merry error values if input was exactly one error
-func (p provider) extractContextAndError(ctx context.Context, args []interface{}) (context.Context, merry.Error) {
+func (p provider) extractContext(ctx context.Context, args []interface{}, includeTrace bool) context.Context {
 	if len(args) == 1 {
 		if err, ok := args[0].(error); ok {
 			fields := make(log.Fields)
@@ -36,40 +36,41 @@ func (p provider) extractContextAndError(ctx context.Context, args []interface{}
 					switch key {
 					case "stack", "message":
 					// Merry built-ins; ignore
+					case "user message":
+						fields["userMessage"] = val
 					default:
 						fields[key] = val
 					}
 				}
 			}
-			// Always turn the error into a merry error, to provide best-effort traceback for basic errors
-			return log.ContextWithFields(ctx, fields), merry.Wrap(err)
+			if includeTrace {
+				// Use tilde to sort stacktrace last, which at least for logrus is more readable
+				// Call merry.Wrap to generate trace for non-merry errors; that trace will be to
+				// here, not to where the error was generated, but better than nothing.
+				fields["~stackTrace"] = merry.Stacktrace(merry.Wrap(err))
+			}
+			return log.ContextWithFields(ctx, fields)
 		}
 	}
-	return ctx, nil
+	// No error found
+	return ctx
 }
 
 // We always extract merry Values from an error, but only for Error level do we print a traceback
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
-	ctx, err := p.extractContextAndError(ctx, args)
-	if err != nil {
-		args = []interface{}{merry.Details(err)}
-	}
-	p.nextProvider.Error(ctx, report, args...)
+	p.nextProvider.Error(p.extractContext(ctx, args, true), report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	ctx, _ = p.extractContextAndError(ctx, args)
-	p.nextProvider.Warn(ctx, report, args...)
+	p.nextProvider.Warn(p.extractContext(ctx, args, false), report, args...)
 }
 
 func (p provider) Info(ctx context.Context, report bool, args ...interface{}) {
-	ctx, _ = p.extractContextAndError(ctx, args)
-	p.nextProvider.Info(ctx, report, args...)
+	p.nextProvider.Info(p.extractContext(ctx, args, false), report, args...)
 }
 
 func (p provider) Debug(ctx context.Context, report bool, args ...interface{}) {
-	ctx, _ = p.extractContextAndError(ctx, args)
-	p.nextProvider.Debug(ctx, report, args...)
+	p.nextProvider.Debug(p.extractContext(ctx, args, false), report, args...)
 }
 
 func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
