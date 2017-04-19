@@ -68,8 +68,8 @@ type ComposableLogger interface {
 	Warn(args ...interface{})
 	InfoReport(args ...interface{})
 	Info(args ...interface{})
-	Debug(args ...interface{})
 	DebugReport(args ...interface{})
+	Debug(args ...interface{})
 	Record(metrics Metrics)
 	RecordEvent(eventName string, metrics Metrics)
 
