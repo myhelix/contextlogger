@@ -17,7 +17,7 @@ Log providers are chained together in whatever combination you desire. New log p
 
 ## Logging Interface
 
-The main interface you interact with in using ContextLogger is log.ContextLogger, which includes context.Context as well as the following logging methods:
+The main interface you interact with in using ContextLogger is log.ContextLogger, which includes standard library context.Context as well as the following logging methods:
 
 ```go
 ErrorReport(    args ...interface{})
