@@ -3,6 +3,8 @@ This project provides a pluggable, context-based logging, error reporting, and p
 
 The "log" package is largely compatible with [Logrus](https://github.com/sirupsen/logrus), and Logrus can be used for output.
 
+You can see the slides from Chris Williams' presentation to GoSF in April 2017, Context Patterns for Logging, [here](http://bit.ly/2pGVCYE).
+
 ## Included Log Providers
 
 The following packages are provided:
