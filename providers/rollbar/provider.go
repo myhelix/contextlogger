@@ -14,6 +14,7 @@ import (
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/providers/chaining"
 
 	"context"
 	"errors"
@@ -23,17 +24,14 @@ import (
 )
 
 type provider struct {
-	nextProvider providers.LogProvider
+	providers.LogProvider
 }
 
 func LogProvider(nextProvider providers.LogProvider) (providers.LogProvider, error) {
-	if nextProvider == nil {
-		return nil, errors.New("Rollbar log provider requires a base provider")
-	}
 	if rollbar.Token == "" {
 		return nil, errors.New("Rollbar is not configured (no token)")
 	}
-	return provider{nextProvider}, nil
+	return provider{chaining.LogProvider(nextProvider)}, nil
 }
 
 type contextRequestKey struct{}
@@ -101,39 +99,26 @@ func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
 	if report {
 		p.reportToRollbar(ctx, rollbar.ERR, args...)
 	}
-	p.nextProvider.Error(ctx, report, args...)
+	p.LogProvider.Error(ctx, report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
 	if report {
 		p.reportToRollbar(ctx, rollbar.WARN, args...)
 	}
-	p.nextProvider.Warn(ctx, report, args...)
+	p.LogProvider.Warn(ctx, report, args...)
 }
 
 func (p provider) Info(ctx context.Context, report bool, args ...interface{}) {
 	if report {
 		p.reportToRollbar(ctx, rollbar.INFO, args...)
 	}
-	p.nextProvider.Info(ctx, report, args...)
+	p.LogProvider.Info(ctx, report, args...)
 }
 
 func (p provider) Debug(ctx context.Context, report bool, args ...interface{}) {
 	if report {
 		p.reportToRollbar(ctx, rollbar.DEBUG, args...)
 	}
-	p.nextProvider.Debug(ctx, report, args...)
-}
-
-func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
-	p.nextProvider.Record(ctx, metrics)
-}
-
-func (p provider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
-	p.nextProvider.RecordEvent(ctx, eventName, metrics)
-}
-
-func (p provider) Wait() {
-	rollbar.Wait()
-	p.nextProvider.Wait()
+	p.LogProvider.Debug(ctx, report, args...)
 }

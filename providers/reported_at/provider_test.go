@@ -29,15 +29,14 @@ func setup(t *testing.T, config Config) {
 		},
 	})
 	Expect(err).To(BeNil())
-	testProvider, err = LogProvider(outputProvider, config)
-	Expect(err).To(BeNil())
+	testProvider = LogProvider(outputProvider, config)
 }
 
 func TestReportedAt(t *testing.T) {
 	setup(t, Config{})
 
 	testProvider.Info(context.Background(), false, "foo")
-	Expect(output.String()).To(MatchRegexp(`time=sometime level=info msg=foo reportedAt=".*/reported_at/provider_test.go:40`))
+	Expect(output.String()).To(MatchRegexp(`time=sometime level=info msg=foo reportedAt=".*/reported_at/provider_test.go:39`))
 }
 
 func TestReportedAtFiltering(t *testing.T) {

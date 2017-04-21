@@ -11,19 +11,17 @@ import (
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/providers/chaining"
 
 	"context"
 )
 
 type provider struct {
-	nextProvider providers.LogProvider
+	providers.LogProvider
 }
 
-func LogProvider(nextProvider providers.LogProvider) (providers.LogProvider, merry.Error) {
-	if nextProvider == nil {
-		return nil, merry.New("Merry log provider requires a base provider")
-	}
-	return provider{nextProvider}, nil
+func LogProvider(nextProvider providers.LogProvider) providers.LogProvider {
+	return provider{chaining.LogProvider(nextProvider)}
 }
 
 // Extract fields from merry error values if input was exactly one error
@@ -61,29 +59,17 @@ func (p provider) extractContext(ctx context.Context, args []interface{}, includ
 
 // We always extract merry Values from an error, but only for Error level do we print a traceback
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
-	p.nextProvider.Error(p.extractContext(ctx, args, true), report, args...)
+	p.LogProvider.Error(p.extractContext(ctx, args, true), report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	p.nextProvider.Warn(p.extractContext(ctx, args, false), report, args...)
+	p.LogProvider.Warn(p.extractContext(ctx, args, false), report, args...)
 }
 
 func (p provider) Info(ctx context.Context, report bool, args ...interface{}) {
-	p.nextProvider.Info(p.extractContext(ctx, args, false), report, args...)
+	p.LogProvider.Info(p.extractContext(ctx, args, false), report, args...)
 }
 
 func (p provider) Debug(ctx context.Context, report bool, args ...interface{}) {
-	p.nextProvider.Debug(p.extractContext(ctx, args, false), report, args...)
-}
-
-func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
-	p.nextProvider.Record(ctx, metrics)
-}
-
-func (p provider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
-	p.nextProvider.RecordEvent(ctx, eventName, metrics)
-}
-
-func (p provider) Wait() {
-	p.nextProvider.Wait()
+	p.LogProvider.Debug(p.extractContext(ctx, args, false), report, args...)
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/providers/chaining"
 
 	"context"
 	"io"
@@ -19,7 +20,7 @@ import (
 
 type provider struct {
 	*logrus.Entry
-	nextProvider providers.LogProvider
+	providers.LogProvider
 }
 
 type Config struct {
@@ -45,7 +46,7 @@ func LogProvider(nextProvider providers.LogProvider, config Config) (l providers
 		Formatter: config.Formatter,
 		Hooks:     make(logrus.LevelHooks),
 		Level:     level,
-	}), nextProvider}
+	}), chaining.LogProvider(nextProvider)}
 	return
 }
 
@@ -55,48 +56,34 @@ func (p provider) entryFor(ctx context.Context) *logrus.Entry {
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
 	p.entryFor(ctx).Error(args...)
-	if p.nextProvider != nil {
-		p.nextProvider.Error(ctx, report, args...)
-	}
+	p.LogProvider.Error(ctx, report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
 	p.entryFor(ctx).Warn(args...)
-	if p.nextProvider != nil {
-		p.nextProvider.Warn(ctx, report, args...)
-	}
+	p.LogProvider.Warn(ctx, report, args...)
 }
 
 func (p provider) Info(ctx context.Context, report bool, args ...interface{}) {
 	p.entryFor(ctx).Info(args...)
-	if p.nextProvider != nil {
-		p.nextProvider.Info(ctx, report, args...)
-	}
+	p.LogProvider.Info(ctx, report, args...)
 }
 
 func (p provider) Debug(ctx context.Context, report bool, args ...interface{}) {
 	p.entryFor(ctx).Debug(args...)
-	if p.nextProvider != nil {
-		p.nextProvider.Debug(ctx, report, args...)
-	}
+	p.LogProvider.Debug(ctx, report, args...)
 }
 
 func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
-	p.WithFields(metrics).Info("Reporting metrics")
-	if p.nextProvider != nil {
-		p.nextProvider.Record(ctx, metrics)
-	}
+	p.Entry.WithFields(metrics).Info("Reporting metrics")
+	p.LogProvider.Record(ctx, metrics)
 }
 
 func (p provider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
-	p.WithField("eventName", eventName).WithFields(metrics).Info("Reporting metrics")
-	if p.nextProvider != nil {
-		p.nextProvider.RecordEvent(ctx, eventName, metrics)
-	}
+	p.Entry.WithField("eventName", eventName).WithFields(metrics).Info("Reporting metrics")
+	p.LogProvider.RecordEvent(ctx, eventName, metrics)
 }
 
 func (p provider) Wait() {
-	if p.nextProvider != nil {
-		p.nextProvider.Wait()
-	}
+	p.LogProvider.Wait()
 }
