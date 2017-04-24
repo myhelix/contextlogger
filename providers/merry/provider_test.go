@@ -31,8 +31,7 @@ func setup(t *testing.T) {
 		},
 	})
 	Expect(err).To(BeNil())
-	testProvider, err = LogProvider(outputProvider)
-	Expect(err).To(BeNil())
+	testProvider = LogProvider(outputProvider)
 }
 
 func TestValueExtraction(t *testing.T) {
