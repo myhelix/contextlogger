@@ -26,13 +26,18 @@ type provider struct {
 type Config struct {
 	Output    io.Writer
 	Level     string
-	Formatter *logrus.TextFormatter
+	Formatter logrus.Formatter
 }
 
 var RecommendedFormatter = &logrus.TextFormatter{
 	FullTimestamp:   true,
 	DisableColors:   true,
 	TimestampFormat: time.RFC3339Nano,
+}
+
+var JSONFormatter = &logrus.JSONFormatter{
+	DisableTimestamp: false,
+	TimestampFormat:  time.RFC3339Nano,
 }
 
 func LogProvider(nextProvider providers.LogProvider, config Config) (l providers.LogProvider, err error) {

@@ -1,3 +1,7 @@
+## 1.1.1 (2017-07-25)
+Features:
+- Added JSON formatter and test for logrus provider. (@mentat)
+
 ## 1.1.0 (2017-04-21)
 Features:
 - Added chaining provider to DRY up provider chaining and allow any provider to act as the base provider. (@chriswhelix)
