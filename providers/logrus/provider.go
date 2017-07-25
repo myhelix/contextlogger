@@ -26,7 +26,7 @@ type provider struct {
 type Config struct {
 	Output    io.Writer
 	Level     string
-	Formatter *logrus.TextFormatter
+	Formatter *logrus.JSONFormatter
 }
 
 var RecommendedFormatter = &logrus.TextFormatter{
