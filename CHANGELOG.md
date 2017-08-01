@@ -1,3 +1,7 @@
+## 1.1.2 (2017-08-01)
+Fixes:
+- Correctly wire up Wait() for rollbar (@chriswhelix)
+
 ## 1.1.1 (2017-07-25)
 Features:
 - Added JSON formatter and test for logrus provider. (@mentat)
