@@ -122,3 +122,8 @@ func (p provider) Debug(ctx context.Context, report bool, args ...interface{}) {
 	}
 	p.LogProvider.Debug(ctx, report, args...)
 }
+
+func (p provider) Wait() {
+	rollbar.Wait()
+	p.LogProvider.Wait()
+}
