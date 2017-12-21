@@ -1,6 +1,6 @@
-## 1.1.3 (2017-12-20)
+## 1.2.0 (2017-12-20)
 Features:
-- Added bufferedLogProvider so that calls to LogProvider methods which have a "report" param can be verified. (@jpecknerhelix)
+- Added StructuredOutputLogProvider so that the args passed to LogProvider methods can be verified. (@jpecknerhelix)
 
 ## 1.1.2 (2017-08-01)
 Fixes:
