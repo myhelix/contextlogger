@@ -7,6 +7,24 @@ import (
 	"context"
 )
 
+type RawLogCallType int
+
+const (
+	Error RawLogCallType = iota
+	Warn
+	Info
+	Debug
+)
+
+func RawLogCallTypes() []RawLogCallType {
+	return []RawLogCallType{
+		Error,
+		Warn,
+		Info,
+		Debug,
+	}
+}
+
 type LogProvider interface {
 	Error(ctx context.Context, report bool, args ...interface{})
 	Warn(ctx context.Context, report bool, args ...interface{})

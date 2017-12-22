@@ -1,3 +1,7 @@
+## 1.2.0 (2017-12-20)
+Features:
+- Added StructuredOutputLogProvider so that the args passed to LogProvider methods can be verified. (@jpecknerhelix)
+
 ## 1.1.2 (2017-08-01)
 Fixes:
 - Correctly wire up Wait() for rollbar (@chriswhelix)
