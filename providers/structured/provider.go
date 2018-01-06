@@ -89,7 +89,7 @@ func (p *StructuredOutputLogProvider) Debug(ctx context.Context, report bool, ar
 	p.saveRawCallArgs(providers.Debug, ctx, report, args...)
 }
 
-func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics log.Metrics) {
+func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics map[string]interface{}) {
 	callArgs := RecordCallArgs{
 		ContextFields: log.FieldsFromContext(ctx),
 		Metrics:       metrics,
@@ -97,7 +97,7 @@ func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics log.Me
 	p.recordCalls = append(p.recordCalls, callArgs)
 }
 
-func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName string, metrics log.Metrics) {
+func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
 	callArgs := RecordEventCallArgs{
 		ContextFields: log.FieldsFromContext(ctx),
 		EventName:     eventName,
