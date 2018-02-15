@@ -87,18 +87,30 @@ func (p *StructuredOutputLogProvider) saveRawCallArgs(
 
 func (p *StructuredOutputLogProvider) Error(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Error, ctx, report, args...)
+	if p.LogProvider != nil {
+		p.LogProvider.Error(ctx, report, args...)
+	}
 }
 
 func (p *StructuredOutputLogProvider) Warn(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Warn, ctx, report, args...)
+	if p.LogProvider != nil {
+		p.LogProvider.Warn(ctx, report, args...)
+	}
 }
 
 func (p *StructuredOutputLogProvider) Info(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Info, ctx, report, args...)
+	if p.LogProvider != nil {
+		p.LogProvider.Info(ctx, report, args...)
+	}
 }
 
 func (p *StructuredOutputLogProvider) Debug(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Debug, ctx, report, args...)
+	if p.LogProvider != nil {
+		p.LogProvider.Debug(ctx, report, args...)
+	}
 }
 
 func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics map[string]interface{}) {
@@ -107,6 +119,10 @@ func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics map[st
 		Metrics:       metrics,
 	}
 	p.recordCalls = append(p.recordCalls, callArgs)
+
+	if p.LogProvider != nil {
+		p.LogProvider.Record(ctx, metrics)
+	}
 }
 
 func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
@@ -116,6 +132,14 @@ func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName
 		Metrics:       metrics,
 	}
 	p.recordEventCalls = append(p.recordEventCalls, callArgs)
+
+	if p.LogProvider != nil {
+		p.LogProvider.RecordEvent(ctx, eventName, metrics)
+	}
 }
 
-func (p *StructuredOutputLogProvider) Wait() {}
+func (p *StructuredOutputLogProvider) Wait() {
+	if p.LogProvider != nil {
+		p.LogProvider.Wait()
+	}
+}
