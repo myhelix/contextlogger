@@ -8,6 +8,7 @@ import (
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/providers/chaining"
 )
 
 type RawLogCallArgs struct {
@@ -28,6 +29,8 @@ type RecordEventCallArgs struct {
 }
 
 type StructuredOutputLogProvider struct {
+	providers.LogProvider
+
 	rawLogCalls      map[providers.RawLogCallType][]RawLogCallArgs
 	recordCalls      []RecordCallArgs
 	recordEventCalls []RecordEventCallArgs
@@ -47,16 +50,25 @@ func (p StructuredOutputLogProvider) GetRecordEventCalls() []RecordEventCallArgs
 
 // NewStructuredOutputLogProvider returns a LogProvider which records all calls made to it.
 func NewStructuredOutputLogProvider() *StructuredOutputLogProvider {
+	return LogProvider(nil).(*StructuredOutputLogProvider)
+}
+
+func LogProvider(nextProvider providers.LogProvider) providers.LogProvider {
 	rawLogCalls := map[providers.RawLogCallType][]RawLogCallArgs{}
 	for _, callType := range providers.RawLogCallTypes() {
 		rawLogCalls[callType] = []RawLogCallArgs{}
 	}
 
-	return &StructuredOutputLogProvider{
+	lp := &StructuredOutputLogProvider{
 		rawLogCalls:      rawLogCalls,
 		recordCalls:      []RecordCallArgs{},
 		recordEventCalls: []RecordEventCallArgs{},
 	}
+
+	if nextProvider != nil {
+		lp.LogProvider = chaining.LogProvider(nextProvider)
+	}
+	return lp
 }
 
 func (p *StructuredOutputLogProvider) saveRawCallArgs(

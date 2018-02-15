@@ -1,3 +1,7 @@
+## 1.3.0 (2018-02-14)
+Features:
+- Added chaining support to StructuredOutputLogProvider (@emre.colak)
+
 ## 1.2.1 (2018-01-05)
 Fixes:
 - Fixes StructuredOutputLogProvider so that it conforms to the LogProvider interface. (@jpecknerhelix)
