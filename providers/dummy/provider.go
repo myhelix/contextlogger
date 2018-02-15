@@ -16,10 +16,27 @@ import (
 
 type provider struct {
 	io.Writer
+	waitState *WaitState
+}
+
+type WaitState struct {
+	waiting bool
+}
+
+func (ws *WaitState) Set(waiting bool) {
+	ws.waiting = waiting
+}
+
+func (ws *WaitState) Get() bool {
+	return ws.waiting
 }
 
 func LogProvider(writer io.Writer) providers.LogProvider {
-	return provider{writer}
+	return provider{writer, new(WaitState)}
+}
+
+func LogProviderWithWaitState(writer io.Writer, waitState *WaitState) providers.LogProvider {
+	return provider{writer, waitState}
 }
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
@@ -46,4 +63,6 @@ func (p provider) RecordEvent(ctx context.Context, eventName string, metrics map
 	fmt.Fprintln(p, eventName, metrics)
 }
 
-func (p provider) Wait() {}
+func (p provider) Wait() {
+	p.waitState.Set(true)
+}
