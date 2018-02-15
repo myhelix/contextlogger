@@ -188,6 +188,7 @@ var _ = Describe("bufferedLogProvider", func() {
 
 	It("Should call wait on the next provider", func() {
 		ws := new(dummy.WaitState)
+		Ω(ws.Get()).Should(BeFalse())
 		dummyProvider := dummy.LogProviderWithWaitState(os.Stdout, ws)
 		lp := LogProvider(dummyProvider).(*StructuredOutputLogProvider)
 		Ω(lp.LogProvider).Should(Equal(chaining.LogProvider(dummyProvider)))
