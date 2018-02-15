@@ -24,6 +24,10 @@ func SetDefaultProvider(provider providers.LogProvider) {
 	defaultProvider = provider
 }
 
+func GetDefaultProvider() providers.LogProvider {
+	return defaultProvider
+}
+
 // Start with something, to avoid crashing before we're configured
 func init() {
 	defaultProvider = dummy.LogProvider(os.Stderr)
