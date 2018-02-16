@@ -8,6 +8,7 @@ import (
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/providers/chaining"
 )
 
 type RawLogCallArgs struct {
@@ -28,6 +29,8 @@ type RecordEventCallArgs struct {
 }
 
 type StructuredOutputLogProvider struct {
+	providers.LogProvider
+
 	rawLogCalls      map[providers.RawLogCallType][]RawLogCallArgs
 	recordCalls      []RecordCallArgs
 	recordEventCalls []RecordEventCallArgs
@@ -46,13 +49,19 @@ func (p StructuredOutputLogProvider) GetRecordEventCalls() []RecordEventCallArgs
 }
 
 // NewStructuredOutputLogProvider returns a LogProvider which records all calls made to it.
+// Deprecated: Clients should call LogProvider instead
 func NewStructuredOutputLogProvider() *StructuredOutputLogProvider {
+	return LogProvider(nil)
+}
+
+func LogProvider(nextProvider providers.LogProvider) *StructuredOutputLogProvider {
 	rawLogCalls := map[providers.RawLogCallType][]RawLogCallArgs{}
 	for _, callType := range providers.RawLogCallTypes() {
 		rawLogCalls[callType] = []RawLogCallArgs{}
 	}
 
 	return &StructuredOutputLogProvider{
+		LogProvider:      chaining.LogProvider(nextProvider),
 		rawLogCalls:      rawLogCalls,
 		recordCalls:      []RecordCallArgs{},
 		recordEventCalls: []RecordEventCallArgs{},
@@ -75,18 +84,22 @@ func (p *StructuredOutputLogProvider) saveRawCallArgs(
 
 func (p *StructuredOutputLogProvider) Error(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Error, ctx, report, args...)
+	p.LogProvider.Error(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Warn(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Warn, ctx, report, args...)
+	p.LogProvider.Warn(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Info(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Info, ctx, report, args...)
+	p.LogProvider.Info(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Debug(ctx context.Context, report bool, args ...interface{}) {
 	p.saveRawCallArgs(providers.Debug, ctx, report, args...)
+	p.LogProvider.Debug(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics map[string]interface{}) {
@@ -95,6 +108,7 @@ func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics map[st
 		Metrics:       metrics,
 	}
 	p.recordCalls = append(p.recordCalls, callArgs)
+	p.LogProvider.Record(ctx, metrics)
 }
 
 func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
@@ -104,6 +118,5 @@ func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName
 		Metrics:       metrics,
 	}
 	p.recordEventCalls = append(p.recordEventCalls, callArgs)
+	p.LogProvider.RecordEvent(ctx, eventName, metrics)
 }
-
-func (p *StructuredOutputLogProvider) Wait() {}
