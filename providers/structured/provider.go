@@ -49,11 +49,12 @@ func (p StructuredOutputLogProvider) GetRecordEventCalls() []RecordEventCallArgs
 }
 
 // NewStructuredOutputLogProvider returns a LogProvider which records all calls made to it.
+// Deprecated: Clients should call LogProvider instead
 func NewStructuredOutputLogProvider() *StructuredOutputLogProvider {
-	return LogProvider(nil).(*StructuredOutputLogProvider)
+	return LogProvider(nil)
 }
 
-func LogProvider(nextProvider providers.LogProvider) providers.LogProvider {
+func LogProvider(nextProvider providers.LogProvider) *StructuredOutputLogProvider {
 	rawLogCalls := map[providers.RawLogCallType][]RawLogCallArgs{}
 	for _, callType := range providers.RawLogCallTypes() {
 		rawLogCalls[callType] = []RawLogCallArgs{}

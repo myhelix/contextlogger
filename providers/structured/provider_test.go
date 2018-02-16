@@ -176,13 +176,13 @@ var _ = Describe("bufferedLogProvider", func() {
 	})
 
 	It("Should construct a chaining StructuredOutputLogProvider that handles a nil next provider", func() {
-		lp := LogProvider(nil).(*StructuredOutputLogProvider)
+		lp := LogProvider(nil)
 		Ω(lp.LogProvider).ShouldNot(BeNil())
 	})
 
 	It("Should construct a chaining log provider with a dummy provider as next provider", func() {
 		dummyProvider := dummy.LogProvider(os.Stdout)
-		lp := LogProvider(dummyProvider).(*StructuredOutputLogProvider)
+		lp := LogProvider(dummyProvider)
 		Ω(lp.LogProvider).Should(Equal(chaining.LogProvider(dummyProvider)))
 	})
 
@@ -190,7 +190,7 @@ var _ = Describe("bufferedLogProvider", func() {
 		ws := new(dummy.WaitState)
 		Ω(ws.Get()).Should(BeFalse())
 		dummyProvider := dummy.LogProviderWithWaitState(os.Stdout, ws)
-		lp := LogProvider(dummyProvider).(*StructuredOutputLogProvider)
+		lp := LogProvider(dummyProvider)
 		Ω(lp.LogProvider).Should(Equal(chaining.LogProvider(dummyProvider)))
 
 		// Calling wait should call wait on the next provider too
@@ -208,7 +208,7 @@ var _ = Describe("bufferedLogProvider", func() {
 
 		// lp is `this` provider, and the `provider` is the next provider.
 		// At the end of this, they should have the same log calls, metrics and events
-		lp := LogProvider(provider).(*StructuredOutputLogProvider)
+		lp := LogProvider(provider)
 
 		// put some logs
 		lp.Error(contextLogger, true, msg1, details1)
