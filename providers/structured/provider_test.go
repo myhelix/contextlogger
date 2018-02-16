@@ -175,9 +175,9 @@ var _ = Describe("bufferedLogProvider", func() {
 		}))
 	})
 
-	It("Should construct a chaining StructuredOutputLogProvider with a nil next provider", func() {
+	It("Should construct a chaining StructuredOutputLogProvider that handles a nil next provider", func() {
 		lp := LogProvider(nil).(*StructuredOutputLogProvider)
-		Ω(lp.LogProvider).Should(BeNil())
+		Ω(lp.LogProvider).ShouldNot(BeNil())
 	})
 
 	It("Should construct a chaining log provider with a dummy provider as next provider", func() {

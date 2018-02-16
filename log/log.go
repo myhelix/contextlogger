@@ -24,7 +24,7 @@ func SetDefaultProvider(provider providers.LogProvider) {
 	defaultProvider = provider
 }
 
-func GetDefaultProvider() providers.LogProvider {
+func DefaultProvider() providers.LogProvider {
 	return defaultProvider
 }
 
