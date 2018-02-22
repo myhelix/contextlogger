@@ -12,55 +12,58 @@ import (
 	"github.com/myhelix/contextlogger/providers/chaining"
 )
 
-type RawLogCallArgs struct {
+type LogCallArgs struct {
 	ContextFields log.Fields
 	Report        bool
 	Args          []interface{}
-	CallType      providers.RawLogCallType
+	Level         providers.LogLevel
 }
 
 type RecordCallArgs struct {
 	ContextFields log.Fields
 	Metrics       log.Metrics
-}
-
-type RecordEventCallArgs struct {
-	ContextFields log.Fields
 	EventName     string
-	Metrics       log.Metrics
 }
 
 type StructuredOutputLogProvider struct {
 	providers.LogProvider
 
-	rawLogCalls      []RawLogCallArgs
-	recordCalls      []RecordCallArgs
-	recordEventCalls []RecordEventCallArgs
-	logMutex         sync.RWMutex
-	metricMutex      sync.Mutex
-	eventMutex       sync.Mutex
+	logCalls    []*LogCallArgs
+	logMutex    sync.RWMutex
+	recordCalls []*RecordCallArgs
+	recordMutex sync.RWMutex
 }
 
-func (p StructuredOutputLogProvider) GetRawLogCallsByCallType(callType providers.RawLogCallType) []RawLogCallArgs {
-	var result []RawLogCallArgs
-
+// Return list of log calls, filtered to only selected levels (if any present)
+func (p StructuredOutputLogProvider) LogCalls(levels ...providers.LogLevel) (result []*LogCallArgs) {
 	p.logMutex.RLock()
 	defer p.logMutex.RUnlock()
 
-	for _, log := range p.rawLogCalls {
-		if log.CallType == callType {
-			result = append(result, log)
+	for _, call := range p.logCalls {
+		if len(levels) == 0 {
+			result = append(result, call)
+		} else {
+			for _, level := range levels {
+				if call.Level == level {
+					result = append(result, call)
+					break
+				}
+			}
 		}
 	}
+	return
+}
+
+func (p StructuredOutputLogProvider) RecordCalls() []*RecordCallArgs {
+	p.recordMutex.RLock()
+	defer p.recordMutex.RUnlock()
+
+	result := make([]*RecordCallArgs, len(p.recordCalls))
+
+	for i, call := range p.recordCalls {
+		result[i] = call
+	}
 	return result
-}
-
-func (p StructuredOutputLogProvider) GetRecordCalls() []RecordCallArgs {
-	return p.recordCalls
-}
-
-func (p StructuredOutputLogProvider) GetRecordEventCalls() []RecordEventCallArgs {
-	return p.recordEventCalls
 }
 
 // NewStructuredOutputLogProvider returns a LogProvider which records all calls made to it.
@@ -71,69 +74,70 @@ func NewStructuredOutputLogProvider() *StructuredOutputLogProvider {
 
 func LogProvider(nextProvider providers.LogProvider) *StructuredOutputLogProvider {
 	return &StructuredOutputLogProvider{
-		LogProvider:      chaining.LogProvider(nextProvider),
-		rawLogCalls:      []RawLogCallArgs{},
-		recordCalls:      []RecordCallArgs{},
-		recordEventCalls: []RecordEventCallArgs{},
+		LogProvider: chaining.LogProvider(nextProvider),
+		logCalls:    []*LogCallArgs{},
+		recordCalls: []*RecordCallArgs{},
 	}
 }
 
-func (p *StructuredOutputLogProvider) saveRawCallArgs(
-	callType providers.RawLogCallType,
+func (p *StructuredOutputLogProvider) saveLogCallArgs(
+	level providers.LogLevel,
 	ctx context.Context,
 	report bool,
 	args ...interface{},
 ) {
-	callArgs := RawLogCallArgs{
+	callArgs := LogCallArgs{
 		ContextFields: log.FieldsFromContext(ctx),
 		Report:        report,
 		Args:          args,
-		CallType:      callType,
+		Level:         level,
 	}
 	p.logMutex.Lock()
 	defer p.logMutex.Unlock()
-	p.rawLogCalls = append(p.rawLogCalls, callArgs)
+	p.logCalls = append(p.logCalls, &callArgs)
 }
 
 func (p *StructuredOutputLogProvider) Error(ctx context.Context, report bool, args ...interface{}) {
-	p.saveRawCallArgs(providers.Error, ctx, report, args...)
+	p.saveLogCallArgs(providers.Error, ctx, report, args...)
 	p.LogProvider.Error(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	p.saveRawCallArgs(providers.Warn, ctx, report, args...)
+	p.saveLogCallArgs(providers.Warn, ctx, report, args...)
 	p.LogProvider.Warn(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Info(ctx context.Context, report bool, args ...interface{}) {
-	p.saveRawCallArgs(providers.Info, ctx, report, args...)
+	p.saveLogCallArgs(providers.Info, ctx, report, args...)
 	p.LogProvider.Info(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Debug(ctx context.Context, report bool, args ...interface{}) {
-	p.saveRawCallArgs(providers.Debug, ctx, report, args...)
+	p.saveLogCallArgs(providers.Debug, ctx, report, args...)
 	p.LogProvider.Debug(ctx, report, args...)
 }
 
 func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics map[string]interface{}) {
+	p.LogProvider.Record(ctx, metrics)
+
 	callArgs := RecordCallArgs{
 		ContextFields: log.FieldsFromContext(ctx),
 		Metrics:       metrics,
 	}
-	p.metricMutex.Lock()
-	defer p.metricMutex.Unlock()
-	p.recordCalls = append(p.recordCalls, callArgs)
-	p.LogProvider.Record(ctx, metrics)
+	p.recordMutex.Lock()
+	defer p.recordMutex.Unlock()
+	p.recordCalls = append(p.recordCalls, &callArgs)
 }
 
 func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
-	callArgs := RecordEventCallArgs{
+	p.LogProvider.RecordEvent(ctx, eventName, metrics)
+
+	callArgs := RecordCallArgs{
 		ContextFields: log.FieldsFromContext(ctx),
 		EventName:     eventName,
 		Metrics:       metrics,
 	}
-	p.eventMutex.Lock()
-	defer p.eventMutex.Unlock()
-	p.recordEventCalls = append(p.recordEventCalls, callArgs)
-	p.LogProvider.RecordEvent(ctx, eventName, metrics)
+	p.recordMutex.Lock()
+	defer p.recordMutex.Unlock()
+	p.recordCalls = append(p.recordCalls, &callArgs)
 }

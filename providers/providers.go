@@ -7,23 +7,14 @@ import (
 	"context"
 )
 
-type RawLogCallType int
+type LogLevel int
 
 const (
-	Error RawLogCallType = iota
+	Error LogLevel = iota
 	Warn
 	Info
 	Debug
 )
-
-func RawLogCallTypes() []RawLogCallType {
-	return []RawLogCallType{
-		Error,
-		Warn,
-		Info,
-		Debug,
-	}
-}
 
 type LogProvider interface {
 	Error(ctx context.Context, report bool, args ...interface{})

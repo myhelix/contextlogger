@@ -1,5 +1,5 @@
 hash: dd81cbc48c540e9398470180c6509780b447987a7adc24a8276a7efe793bd3b1
-updated: 2017-04-14T14:25:09.969905621-07:00
+updated: 2018-02-22T15:27:43.800196764-08:00
 imports:
 - name: github.com/ansel1/merry
   version: 5d27db058b2209512885615d6b5d96df9569d0c9
@@ -8,9 +8,10 @@ imports:
 - name: github.com/myhelix/rollbar
   version: 41394a7897169d9f5cd43a6ee6ae82518e30a7f2
 - name: github.com/newrelic/go-agent
-  version: 60ed7aa03a85a1355b4189f66e23604de8f27d57
+  version: f5bce3387232559bcbe6a5f8227c4bf508dac1ba
   subpackages:
   - internal
+  - internal/cat
   - internal/jsonx
   - internal/logger
   - internal/sysinfo
@@ -22,6 +23,26 @@ imports:
   subpackages:
   - unix
 testImports:
+- name: github.com/onsi/ginkgo
+  version: 9008c7b79f9636c46a0a945141020124702f0ecf
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/spec_iterator
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - reporters/stenographer/support/go-colorable
+  - reporters/stenographer/support/go-isatty
+  - types
 - name: github.com/onsi/gomega
   version: e85f63af4302dc0e4277c6008ecf803f1d80e4f0
   subpackages:
