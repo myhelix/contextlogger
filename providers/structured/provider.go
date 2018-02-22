@@ -16,6 +16,7 @@ type RawLogCallArgs struct {
 	ContextFields log.Fields
 	Report        bool
 	Args          []interface{}
+	CallType      providers.RawLogCallType
 }
 
 type RecordCallArgs struct {
@@ -32,7 +33,7 @@ type RecordEventCallArgs struct {
 type StructuredOutputLogProvider struct {
 	providers.LogProvider
 
-	rawLogCalls      map[providers.RawLogCallType][]RawLogCallArgs
+	rawLogCalls      []RawLogCallArgs
 	recordCalls      []RecordCallArgs
 	recordEventCalls []RecordEventCallArgs
 	logMutex         sync.RWMutex
@@ -40,14 +41,18 @@ type StructuredOutputLogProvider struct {
 	eventMutex       sync.Mutex
 }
 
-func (p StructuredOutputLogProvider) GetRawLogCalls() map[providers.RawLogCallType][]RawLogCallArgs {
-	return p.rawLogCalls
-}
-
 func (p StructuredOutputLogProvider) GetRawLogCallsByCallType(callType providers.RawLogCallType) []RawLogCallArgs {
+	var result []RawLogCallArgs
+
 	p.logMutex.RLock()
 	defer p.logMutex.RUnlock()
-	return p.rawLogCalls[callType]
+
+	for _, log := range p.rawLogCalls {
+		if log.CallType == callType {
+			result = append(result, log)
+		}
+	}
+	return result
 }
 
 func (p StructuredOutputLogProvider) GetRecordCalls() []RecordCallArgs {
@@ -65,14 +70,9 @@ func NewStructuredOutputLogProvider() *StructuredOutputLogProvider {
 }
 
 func LogProvider(nextProvider providers.LogProvider) *StructuredOutputLogProvider {
-	rawLogCalls := map[providers.RawLogCallType][]RawLogCallArgs{}
-	for _, callType := range providers.RawLogCallTypes() {
-		rawLogCalls[callType] = []RawLogCallArgs{}
-	}
-
 	return &StructuredOutputLogProvider{
 		LogProvider:      chaining.LogProvider(nextProvider),
-		rawLogCalls:      rawLogCalls,
+		rawLogCalls:      []RawLogCallArgs{},
 		recordCalls:      []RecordCallArgs{},
 		recordEventCalls: []RecordEventCallArgs{},
 	}
@@ -88,10 +88,11 @@ func (p *StructuredOutputLogProvider) saveRawCallArgs(
 		ContextFields: log.FieldsFromContext(ctx),
 		Report:        report,
 		Args:          args,
+		CallType:      callType,
 	}
 	p.logMutex.Lock()
 	defer p.logMutex.Unlock()
-	p.rawLogCalls[callType] = append(p.rawLogCalls[callType], callArgs)
+	p.rawLogCalls = append(p.rawLogCalls, callArgs)
 }
 
 func (p *StructuredOutputLogProvider) Error(ctx context.Context, report bool, args ...interface{}) {
