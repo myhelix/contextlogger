@@ -5,6 +5,7 @@ package structured
 
 import (
 	"context"
+	"sync"
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
@@ -34,10 +35,19 @@ type StructuredOutputLogProvider struct {
 	rawLogCalls      map[providers.RawLogCallType][]RawLogCallArgs
 	recordCalls      []RecordCallArgs
 	recordEventCalls []RecordEventCallArgs
+	logMutex         sync.RWMutex
+	metricMutex      sync.Mutex
+	eventMutex       sync.Mutex
 }
 
 func (p StructuredOutputLogProvider) GetRawLogCalls() map[providers.RawLogCallType][]RawLogCallArgs {
 	return p.rawLogCalls
+}
+
+func (p StructuredOutputLogProvider) GetRawLogCallsByCallType(callType providers.RawLogCallType) []RawLogCallArgs {
+	p.logMutex.RLock()
+	defer p.logMutex.RUnlock()
+	return p.rawLogCalls[callType]
 }
 
 func (p StructuredOutputLogProvider) GetRecordCalls() []RecordCallArgs {
@@ -79,6 +89,8 @@ func (p *StructuredOutputLogProvider) saveRawCallArgs(
 		Report:        report,
 		Args:          args,
 	}
+	p.logMutex.Lock()
+	defer p.logMutex.Unlock()
 	p.rawLogCalls[callType] = append(p.rawLogCalls[callType], callArgs)
 }
 
@@ -107,6 +119,8 @@ func (p *StructuredOutputLogProvider) Record(ctx context.Context, metrics map[st
 		ContextFields: log.FieldsFromContext(ctx),
 		Metrics:       metrics,
 	}
+	p.metricMutex.Lock()
+	defer p.metricMutex.Unlock()
 	p.recordCalls = append(p.recordCalls, callArgs)
 	p.LogProvider.Record(ctx, metrics)
 }
@@ -117,6 +131,8 @@ func (p *StructuredOutputLogProvider) RecordEvent(ctx context.Context, eventName
 		EventName:     eventName,
 		Metrics:       metrics,
 	}
+	p.eventMutex.Lock()
+	defer p.eventMutex.Unlock()
 	p.recordEventCalls = append(p.recordEventCalls, callArgs)
 	p.LogProvider.RecordEvent(ctx, eventName, metrics)
 }

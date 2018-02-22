@@ -175,6 +175,31 @@ var _ = Describe("bufferedLogProvider", func() {
 		}))
 	})
 
+	It("Should retrieve calls by call type", func() {
+		provider.Info(contextLogger, true, "Info message 1", "Details about info message 1")
+		provider.Info(contextLogger, false, "Info message 2", "Details about info message 2")
+		provider.Debug(contextLogger, true, "Debug message 1", "Details about debug message 1")
+		provider.Debug(contextLogger, false, "Debug message 2", "Details about debug message 2")
+		provider.Error(contextLogger, true, "Error message 1", "Details about error message 1")
+		provider.Error(contextLogger, false, "Error message 2", "Details about error message 2")
+
+		// Verify
+		infoCalls := provider.GetRawLogCallsByCallType(providers.Info)
+		Ω(len(infoCalls)).Should(Equal(2))
+		Ω(infoCalls).Should(Equal([]RawLogCallArgs{
+			{
+				ContextFields: fields,
+				Report:        true,
+				Args:          []interface{}{"Info message 1", "Details about info message 1"},
+			},
+			{
+				ContextFields: fields,
+				Report:        false,
+				Args:          []interface{}{"Info message 2", "Details about info message 2"},
+			},
+		}))
+	})
+
 	It("Should construct a chaining StructuredOutputLogProvider that handles a nil next provider", func() {
 		lp := LogProvider(nil)
 		Ω(lp.LogProvider).ShouldNot(BeNil())
