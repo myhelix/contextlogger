@@ -28,7 +28,7 @@ var _ = Describe("bufferedLogProvider", func() {
 		contextLogger log.ContextLogger
 	)
 
-	var verifyEmptyLogCalls = func(callTypes []providers.RawLogCallType) {
+	var verifyEmptyLogCalls = func(callTypes []providers.LogCallType) {
 		for _, callType := range callTypes {
 			Ω(provider.GetLogCallsByCallType(callType)).Should(BeEmpty())
 		}
@@ -60,7 +60,7 @@ var _ = Describe("bufferedLogProvider", func() {
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.RawLogCallType{providers.Info, providers.Warn, providers.Debug})
+		verifyEmptyLogCalls([]providers.LogCallType{providers.Info, providers.Warn, providers.Debug})
 	})
 
 	It("Should log multiple Warn calls", func() {
@@ -84,7 +84,7 @@ var _ = Describe("bufferedLogProvider", func() {
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.RawLogCallType{providers.Info, providers.Error, providers.Debug})
+		verifyEmptyLogCalls([]providers.LogCallType{providers.Info, providers.Error, providers.Debug})
 	})
 
 	It("Should log multiple Info calls", func() {
@@ -108,7 +108,7 @@ var _ = Describe("bufferedLogProvider", func() {
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.RawLogCallType{providers.Error, providers.Warn, providers.Debug})
+		verifyEmptyLogCalls([]providers.LogCallType{providers.Error, providers.Warn, providers.Debug})
 	})
 
 	It("Should log multiple Debug calls", func() {
@@ -132,7 +132,7 @@ var _ = Describe("bufferedLogProvider", func() {
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.RawLogCallType{providers.Info, providers.Warn, providers.Error})
+		verifyEmptyLogCalls([]providers.LogCallType{providers.Info, providers.Warn, providers.Error})
 	})
 
 	It("Should log multiple Record calls", func() {

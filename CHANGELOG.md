@@ -3,6 +3,7 @@ Features:
 - Thread safety for StructuredOutputLogProvider (@emre.colak)
 
 Breaking changes:
+- Renamed type RawLogCallType inside providers to LogCallType. (@emre.colak)
 - Renamed type RawLogCalls inside providers/structured to LogCalls. (@emre.colak)
 - Removed GetRawLogCalls() method from StructuredOutputLogProvider. Clients should now use GetLogCallsByCallType() (@emre.colak)
 

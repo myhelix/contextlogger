@@ -7,17 +7,17 @@ import (
 	"context"
 )
 
-type RawLogCallType int
+type LogCallType int
 
 const (
-	Error RawLogCallType = iota
+	Error LogCallType = iota
 	Warn
 	Info
 	Debug
 )
 
-func RawLogCallTypes() []RawLogCallType {
-	return []RawLogCallType{
+func LogCallTypes() []LogCallType {
+	return []LogCallType{
 		Error,
 		Warn,
 		Info,
