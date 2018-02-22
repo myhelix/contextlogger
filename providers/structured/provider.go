@@ -12,7 +12,7 @@ import (
 	"github.com/myhelix/contextlogger/providers/chaining"
 )
 
-type RawLogCallArgs struct {
+type LogCallArgs struct {
 	ContextFields log.Fields
 	Report        bool
 	Args          []interface{}
@@ -33,7 +33,7 @@ type RecordEventCallArgs struct {
 type StructuredOutputLogProvider struct {
 	providers.LogProvider
 
-	rawLogCalls      []RawLogCallArgs
+	rawLogCalls      []LogCallArgs
 	recordCalls      []RecordCallArgs
 	recordEventCalls []RecordEventCallArgs
 	logMutex         sync.RWMutex
@@ -41,8 +41,8 @@ type StructuredOutputLogProvider struct {
 	eventMutex       sync.Mutex
 }
 
-func (p StructuredOutputLogProvider) GetRawLogCallsByCallType(callType providers.RawLogCallType) []RawLogCallArgs {
-	var result []RawLogCallArgs
+func (p StructuredOutputLogProvider) GetLogCallsByCallType(callType providers.RawLogCallType) []LogCallArgs {
+	var result []LogCallArgs
 
 	p.logMutex.RLock()
 	defer p.logMutex.RUnlock()
@@ -72,7 +72,7 @@ func NewStructuredOutputLogProvider() *StructuredOutputLogProvider {
 func LogProvider(nextProvider providers.LogProvider) *StructuredOutputLogProvider {
 	return &StructuredOutputLogProvider{
 		LogProvider:      chaining.LogProvider(nextProvider),
-		rawLogCalls:      []RawLogCallArgs{},
+		rawLogCalls:      []LogCallArgs{},
 		recordCalls:      []RecordCallArgs{},
 		recordEventCalls: []RecordEventCallArgs{},
 	}
@@ -84,7 +84,7 @@ func (p *StructuredOutputLogProvider) saveRawCallArgs(
 	report bool,
 	args ...interface{},
 ) {
-	callArgs := RawLogCallArgs{
+	callArgs := LogCallArgs{
 		ContextFields: log.FieldsFromContext(ctx),
 		Report:        report,
 		Args:          args,
