@@ -28,9 +28,9 @@ var _ = Describe("bufferedLogProvider", func() {
 		contextLogger log.ContextLogger
 	)
 
-	var verifyEmptyLogCalls = func(callTypes []providers.LogCallType) {
-		for _, callType := range callTypes {
-			Ω(provider.GetLogCallsByCallType(callType)).Should(BeEmpty())
+	var verifyEmptyLogCalls = func(logLevels []providers.LogLevel) {
+		for _, level := range logLevels {
+			Ω(provider.LogCalls(level)).Should(BeEmpty())
 		}
 	}
 
@@ -45,22 +45,23 @@ var _ = Describe("bufferedLogProvider", func() {
 		provider.Error(contextLogger, false, "Message 2", "Some additional details about message 2")
 
 		// Verify
-		errorCalls := provider.GetLogCallsByCallType(providers.Error)
-		Ω(errorCalls).Should(Equal([]LogCallArgs{
-			{
+		errorCalls := provider.LogCalls(providers.Error)
+		Ω(errorCalls).Should(Equal([]*LogCallArgs{
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        true,
 				Args:          []interface{}{"Message 1", "Some additional details about message 1"},
-				CallType:      providers.Error,
-			}, {
+				Level:         providers.Error,
+			},
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        false,
 				Args:          []interface{}{"Message 2", "Some additional details about message 2"},
-				CallType:      providers.Error,
+				Level:         providers.Error,
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.LogCallType{providers.Info, providers.Warn, providers.Debug})
+		verifyEmptyLogCalls([]providers.LogLevel{providers.Info, providers.Warn, providers.Debug})
 	})
 
 	It("Should log multiple Warn calls", func() {
@@ -69,22 +70,23 @@ var _ = Describe("bufferedLogProvider", func() {
 		provider.Warn(contextLogger, false, "Message 2", "Some additional details about message 2")
 
 		// Verify
-		warnCalls := provider.GetLogCallsByCallType(providers.Warn)
-		Ω(warnCalls).Should(Equal([]LogCallArgs{
-			{
+		warnCalls := provider.LogCalls(providers.Warn)
+		Ω(warnCalls).Should(Equal([]*LogCallArgs{
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        true,
 				Args:          []interface{}{"Message 1", "Some additional details about message 1"},
-				CallType:      providers.Warn,
-			}, {
+				Level:         providers.Warn,
+			},
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        false,
 				Args:          []interface{}{"Message 2", "Some additional details about message 2"},
-				CallType:      providers.Warn,
+				Level:         providers.Warn,
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.LogCallType{providers.Info, providers.Error, providers.Debug})
+		verifyEmptyLogCalls([]providers.LogLevel{providers.Info, providers.Error, providers.Debug})
 	})
 
 	It("Should log multiple Info calls", func() {
@@ -93,22 +95,23 @@ var _ = Describe("bufferedLogProvider", func() {
 		provider.Info(contextLogger, false, "Message 2", "Some additional details about message 2")
 
 		// Verify
-		infoCalls := provider.GetLogCallsByCallType(providers.Info)
-		Ω(infoCalls).Should(Equal([]LogCallArgs{
-			{
+		infoCalls := provider.LogCalls(providers.Info)
+		Ω(infoCalls).Should(Equal([]*LogCallArgs{
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        true,
 				Args:          []interface{}{"Message 1", "Some additional details about message 1"},
-				CallType:      providers.Info,
-			}, {
+				Level:         providers.Info,
+			},
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        false,
 				Args:          []interface{}{"Message 2", "Some additional details about message 2"},
-				CallType:      providers.Info,
+				Level:         providers.Info,
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.LogCallType{providers.Error, providers.Warn, providers.Debug})
+		verifyEmptyLogCalls([]providers.LogLevel{providers.Error, providers.Warn, providers.Debug})
 	})
 
 	It("Should log multiple Debug calls", func() {
@@ -117,22 +120,23 @@ var _ = Describe("bufferedLogProvider", func() {
 		provider.Debug(contextLogger, false, "Message 2", "Some additional details about message 2")
 
 		// Verify
-		debugCalls := provider.GetLogCallsByCallType(providers.Debug)
-		Ω(debugCalls).Should(Equal([]LogCallArgs{
-			{
+		debugCalls := provider.LogCalls(providers.Debug)
+		Ω(debugCalls).Should(Equal([]*LogCallArgs{
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        true,
 				Args:          []interface{}{"Message 1", "Some additional details about message 1"},
-				CallType:      providers.Debug,
-			}, {
+				Level:         providers.Debug,
+			},
+			&LogCallArgs{
 				ContextFields: fields,
 				Report:        false,
 				Args:          []interface{}{"Message 2", "Some additional details about message 2"},
-				CallType:      providers.Debug,
+				Level:         providers.Debug,
 			},
 		}))
 
-		verifyEmptyLogCalls([]providers.LogCallType{providers.Info, providers.Warn, providers.Error})
+		verifyEmptyLogCalls([]providers.LogLevel{providers.Info, providers.Warn, providers.Error})
 	})
 
 	It("Should log multiple Record calls", func() {
@@ -147,20 +151,21 @@ var _ = Describe("bufferedLogProvider", func() {
 		})
 
 		// Verify
-		recordCalls := provider.GetRecordCalls()
-		Ω(len(recordCalls)).Should(Equal(2))
-		Ω(recordCalls[0]).Should(Equal(RecordCallArgs{
-			ContextFields: fields,
-			Metrics: log.Metrics{
-				"Metric 1": "Value 1",
-				"Metric 2": "Value 2",
+		recordCalls := provider.RecordCalls()
+		Ω(recordCalls).Should(Equal([]*RecordCallArgs{
+			&RecordCallArgs{
+				ContextFields: fields,
+				Metrics: log.Metrics{
+					"Metric 1": "Value 1",
+					"Metric 2": "Value 2",
+				},
 			},
-		}))
-		Ω(recordCalls[1]).Should(Equal(RecordCallArgs{
-			ContextFields: fields,
-			Metrics: log.Metrics{
-				"Metric 3": "Value 3",
-				"Metric 4": "Value 4",
+			&RecordCallArgs{
+				ContextFields: fields,
+				Metrics: log.Metrics{
+					"Metric 3": "Value 3",
+					"Metric 4": "Value 4",
+				},
 			},
 		}))
 	})
@@ -177,22 +182,23 @@ var _ = Describe("bufferedLogProvider", func() {
 		})
 
 		// Verify
-		recordEventCalls := provider.GetRecordEventCalls()
-		Ω(len(recordEventCalls)).Should(Equal(2))
-		Ω(recordEventCalls[0]).Should(Equal(RecordEventCallArgs{
-			ContextFields: fields,
-			EventName:     "Event1",
-			Metrics: log.Metrics{
-				"Metric 1": "Value 1",
-				"Metric 2": "Value 2",
+		recordEventCalls := provider.RecordCalls()
+		Ω(recordEventCalls).Should(Equal([]*RecordCallArgs{
+			&RecordCallArgs{
+				ContextFields: fields,
+				EventName:     "Event1",
+				Metrics: log.Metrics{
+					"Metric 1": "Value 1",
+					"Metric 2": "Value 2",
+				},
 			},
-		}))
-		Ω(recordEventCalls[1]).Should(Equal(RecordEventCallArgs{
-			ContextFields: fields,
-			EventName:     "Event2",
-			Metrics: log.Metrics{
-				"Metric 3": "Value 3",
-				"Metric 4": "Value 4",
+			&RecordCallArgs{
+				ContextFields: fields,
+				EventName:     "Event2",
+				Metrics: log.Metrics{
+					"Metric 3": "Value 3",
+					"Metric 4": "Value 4",
+				},
 			},
 		}))
 	})
@@ -263,15 +269,12 @@ var _ = Describe("bufferedLogProvider", func() {
 		})
 
 		// Verify logs
-		Ω(lp.GetLogCallsByCallType(providers.Error)).Should(Equal(provider.GetLogCallsByCallType(providers.Error)))
-		Ω(lp.GetLogCallsByCallType(providers.Info)).Should(Equal(provider.GetLogCallsByCallType(providers.Info)))
-		Ω(lp.GetLogCallsByCallType(providers.Debug)).Should(Equal(provider.GetLogCallsByCallType(providers.Debug)))
-		Ω(lp.GetLogCallsByCallType(providers.Warn)).Should(Equal(provider.GetLogCallsByCallType(providers.Warn)))
+		Ω(lp.LogCalls(providers.Error)).Should(Equal(provider.LogCalls(providers.Error)))
+		Ω(lp.LogCalls(providers.Info)).Should(Equal(provider.LogCalls(providers.Info)))
+		Ω(lp.LogCalls(providers.Debug)).Should(Equal(provider.LogCalls(providers.Debug)))
+		Ω(lp.LogCalls(providers.Warn)).Should(Equal(provider.LogCalls(providers.Warn)))
 
-		// Verify metrics
-		Ω(lp.GetRecordCalls()).Should(Equal(provider.GetRecordCalls()))
-
-		// Verify events
-		Ω(lp.GetRecordEventCalls()).Should(Equal(provider.GetRecordEventCalls()))
+		// Verify events and metrics
+		Ω(lp.RecordCalls()).Should(Equal(provider.RecordCalls()))
 	})
 })
