@@ -36,7 +36,7 @@ func TestReportedAt(t *testing.T) {
 	setup(t, Config{})
 
 	testProvider.Info(context.Background(), false, "foo")
-	Expect(output.String()).To(MatchRegexp(`time=sometime level=info msg=foo reportedAt=".*/reported_at/provider_test.go:39`))
+	Expect(output.String()).To(MatchRegexp(`time=sometime level=info msg=foo reportedAt=".*/reported_at/provider_test.go:\d+`))
 }
 
 func TestReportedAtFiltering(t *testing.T) {

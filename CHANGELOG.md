@@ -1,3 +1,16 @@
+## 1.4.0 (2018-02-22)
+Features:
+- Thread safety for StructuredOutputLogProvider (@emre.colak)
+
+Breaking changes:
+- Renamed type RawLogCallType inside providers to LogLevel. (@emre.colak)
+- Renamed type RawLogCalls inside providers/structured to LogCalls.
+- Renamed method GetRecordCallArgs to RecordCalls in StructuredOutputLogProvider. This method also returns a slice of pointers instead of values now.
+- Removed type RecordEventCallArgs from providers/structured.
+- Removed method GetRecordEventCalls from StructuredOutputLogProvider.
+- Removed method GetRawLogCalls from StructuredOutputLogProvider. Clients should now use LogCalls by passing appropriate log levels. This method also returns a slice of pointers instead of values now.
+- Removed the deprecated constructor NewStructuredOutputLogProvider from providers/structured
+
 ## 1.3.0 (2018-02-14)
 Features:
 - Added chaining support to StructuredOutputLogProvider (@emre.colak)
