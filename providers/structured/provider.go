@@ -39,8 +39,9 @@ func (p StructuredOutputLogProvider) LogCalls(levels ...providers.LogLevel) (res
 	p.logMutex.RLock()
 	defer p.logMutex.RUnlock()
 
+	allLevels := len(levels) == 0
 	for _, call := range p.logCalls {
-		if len(levels) == 0 {
+		if allLevels {
 			result = append(result, call)
 		} else {
 			for _, level := range levels {
