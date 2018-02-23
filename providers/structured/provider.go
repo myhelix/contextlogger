@@ -66,12 +66,6 @@ func (p StructuredOutputLogProvider) RecordCalls() []*RecordCallArgs {
 	return result
 }
 
-// NewStructuredOutputLogProvider returns a LogProvider which records all calls made to it.
-// Deprecated: Clients should call LogProvider instead
-func NewStructuredOutputLogProvider() *StructuredOutputLogProvider {
-	return LogProvider(nil)
-}
-
 func LogProvider(nextProvider providers.LogProvider) *StructuredOutputLogProvider {
 	return &StructuredOutputLogProvider{
 		LogProvider: chaining.LogProvider(nextProvider),

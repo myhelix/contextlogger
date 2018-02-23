@@ -35,7 +35,7 @@ var _ = Describe("bufferedLogProvider", func() {
 	}
 
 	BeforeEach(func() {
-		provider = NewStructuredOutputLogProvider()
+		provider = LogProvider(nil)
 		contextLogger = log.WithFields(fields)
 	})
 

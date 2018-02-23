@@ -9,6 +9,7 @@ Breaking changes:
 - Removed type RecordEventCallArgs from providers/structured.
 - Removed method GetRecordEventCalls from StructuredOutputLogProvider.
 - Removed method GetRawLogCalls from StructuredOutputLogProvider. Clients should now use LogCalls by passing appropriate log levels. This method also returns a slice of pointers instead of values now.
+- Removed the deprecated constructor NewStructuredOutputLogProvider from providers/structured
 
 ## 1.3.0 (2018-02-14)
 Features:
