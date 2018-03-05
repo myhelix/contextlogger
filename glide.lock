@@ -16,7 +16,7 @@ imports:
   - internal/logger
   - internal/sysinfo
   - internal/utilization
-- name: github.com/Sirupsen/logrus
+- name: github.com/sirupsen/logrus
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: golang.org/x/sys
   version: 7a56174f0086b32866ebd746a794417edbc678a1

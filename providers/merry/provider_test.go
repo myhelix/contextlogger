@@ -7,12 +7,13 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/Sirupsen/logrus"
+	"testing"
+
 	"github.com/ansel1/merry"
 	"github.com/myhelix/contextlogger/providers"
 	cl_logrus "github.com/myhelix/contextlogger/providers/logrus"
 	. "github.com/onsi/gomega"
-	"testing"
+	"github.com/sirupsen/logrus"
 )
 
 var output *bytes.Buffer

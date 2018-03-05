@@ -1,6 +1,6 @@
 package: github.com/myhelix/contextlogger
 import:
-- package: github.com/Sirupsen/logrus
+- package: github.com/sirupsen/logrus
   version: ^0.11.5
 - package: github.com/go-errors/errors
 - package: github.com/myhelix/rollbar

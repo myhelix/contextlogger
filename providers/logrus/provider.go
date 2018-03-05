@@ -7,7 +7,7 @@ This package provides a concrete implementation of LogProvider using Logrus
 package logrus
 
 import (
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
