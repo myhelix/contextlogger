@@ -7,10 +7,10 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
 	. "github.com/onsi/gomega"
+	"github.com/sirupsen/logrus"
 )
 
 var output *bytes.Buffer

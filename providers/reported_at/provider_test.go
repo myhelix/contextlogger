@@ -6,11 +6,12 @@ package reported_at
 import (
 	"bytes"
 	"context"
-	"github.com/Sirupsen/logrus"
+	"testing"
+
 	"github.com/myhelix/contextlogger/providers"
 	cl_logrus "github.com/myhelix/contextlogger/providers/logrus"
 	. "github.com/onsi/gomega"
-	"testing"
+	"github.com/sirupsen/logrus"
 )
 
 var output *bytes.Buffer

@@ -1,3 +1,7 @@
+## 1.4.1 (2018-03-05)
+Fixes:
+- Update the casing of "Sirupsen" to "sirupsen" in imports to logrus (https://github.com/sirupsen/logrus/issues/570)
+
 ## 1.4.0 (2018-02-22)
 Features:
 - Thread safety for StructuredOutputLogProvider (@emre.colak)
