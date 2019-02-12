@@ -1,10 +1,10 @@
-hash: dd81cbc48c540e9398470180c6509780b447987a7adc24a8276a7efe793bd3b1
-updated: 2018-02-22T15:27:43.800196764-08:00
+hash: 1143f4e351403ec6a736e73c0e8d4603592f75f694586b39fdc50a2f9d6af3b5
+updated: 2019-02-11T18:42:33.642582-08:00
 imports:
 - name: github.com/ansel1/merry
-  version: 5d27db058b2209512885615d6b5d96df9569d0c9
+  version: 2f92759fd5ad7ea9dc77b73b909b3132b9a5912e
 - name: github.com/go-errors/errors
-  version: a41850380601eeb43f4350f7d17c6bbd8944aaf8
+  version: a6af135bd4e28680facf08a3d206b454abc877a4
 - name: github.com/myhelix/rollbar
   version: 41394a7897169d9f5cd43a6ee6ae82518e30a7f2
 - name: github.com/newrelic/go-agent

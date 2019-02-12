@@ -1,3 +1,6 @@
+## 1.5.0 (2019-02-11)
+- Fix dependency versions, no more range versions
+
 ## 1.4.1 (2018-03-05)
 Fixes:
 - Update the casing of "Sirupsen" to "sirupsen" in imports to logrus (https://github.com/sirupsen/logrus/issues/570)
