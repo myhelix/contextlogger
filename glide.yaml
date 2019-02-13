@@ -1,10 +1,12 @@
 package: github.com/myhelix/contextlogger
 import:
 - package: github.com/sirupsen/logrus
-  version: ^0.11.5
+  version: 0.11.5
 - package: github.com/go-errors/errors
+  version: 1.0.1
 - package: github.com/myhelix/rollbar
   version: 41394a7897169d9f5cd43a6ee6ae82518e30a7f2
 - package: github.com/newrelic/go-agent
-  version: ^1.8.0
+  version: 1.11.0
 - package: github.com/ansel1/merry
+  version: 1.0.1
