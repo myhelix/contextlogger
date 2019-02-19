@@ -1,2 +1,7 @@
+.dockerignore
+.glide
 .idea
+build-scripts
+contextlogger-rev
+external
 vendor
