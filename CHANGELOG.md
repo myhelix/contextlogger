@@ -1,3 +1,6 @@
+## 1.5.2 (2019-02-19)
+- .gitignore changes for GoCD builds
+
 ## 1.5.1 (2019-02-19)
 - Remove build config. Dev builds will use working copy version, gocd uses 4.9.2 based on pipeline template.
 
