@@ -1,3 +1,6 @@
+## 1.5.1 (2019-02-19)
+- Remove build config. Dev builds will use working copy version, gocd uses 4.9.2 based on pipeline template.
+
 ## 1.5.0 (2019-02-11)
 - Fix dependency versions, no more range versions
 
