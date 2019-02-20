@@ -9,4 +9,4 @@ import:
 - package: github.com/newrelic/go-agent
   version: 1.11.0
 - package: github.com/ansel1/merry
-  version: 1.0.1
+  version: 1.3.1

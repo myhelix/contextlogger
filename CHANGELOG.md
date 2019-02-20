@@ -1,3 +1,6 @@
+## 1.6.0 (2019-02-19)
+- Bump merry to 1.3.1 (including fix for fragile regex to test against stacktrace)
+
 ## 1.5.3 (2019-02-19)
 - Remove build-scripts support
 
