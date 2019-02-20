@@ -1,3 +1,6 @@
+## 1.5.3 (2019-02-19)
+- Remove build-scripts support
+
 ## 1.5.2 (2019-02-19)
 - Updates to fix build
 
