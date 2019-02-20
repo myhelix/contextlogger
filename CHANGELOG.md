@@ -1,3 +1,6 @@
+## 1.6.1 (2019-02-19)
+- Fix another fragile [reg]ex test
+
 ## 1.6.0 (2019-02-19)
 - Bump merry to 1.3.1 (including fix for fragile regex to test against stacktrace)
 
