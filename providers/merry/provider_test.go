@@ -55,8 +55,8 @@ func TestMerryTraceback(t *testing.T) {
 	err := merry.New("it broke").WithValue("how", "badly")
 
 	testProvider.Error(context.Background(), false, err)
-	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" how=badly ~stackTrace=".*myhelix/contextlogger/providers/merry/provider_test.go:.*
-.*TestMerryTraceback: err := merry.New\("it broke"\).WithValue\("how", "badly"\).*
+	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" how=badly ~stackTrace=".*myhelix/contextlogger/providers/merry.*
+.*
 .*
 .*
 .*
