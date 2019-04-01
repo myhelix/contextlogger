@@ -1,3 +1,6 @@
+## 1.7.1 (2019-04-01)
+- Using newer Logrus and Merry versions which include some bug fixes
+
 ## 1.6.1 (2019-02-19)
 - Fix another fragile [reg]ex test
 
