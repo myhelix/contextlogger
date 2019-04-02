@@ -55,13 +55,7 @@ func TestMerryTraceback(t *testing.T) {
 	err := merry.New("it broke").WithValue("how", "badly")
 
 	testProvider.Error(context.Background(), false, err)
-	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" how=badly ~stackTrace=".*myhelix/contextlogger/providers/merry.*
-.*
-.*
-.*
-.*
-.*
-.*"`))
+	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" how=badly ~stackTrace=".*myhelix/contextlogger/providers/merry.*"`))
 }
 
 func TestErrorTraceback(t *testing.T) {
@@ -70,18 +64,7 @@ func TestErrorTraceback(t *testing.T) {
 	err := errors.New("it broke")
 
 	testProvider.Error(context.Background(), false, err)
-	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" ~stackTrace=".*myhelix/contextlogger/providers/merry.*
-.*
-.*
-.*
-.*
-.*
-.*
-.*
-.*
-.*
-.*
-.*`))
+	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" ~stackTrace=".*myhelix/contextlogger/providers/merry.*"`))
 }
 
 /* If you mix an error with other crap, you lose the good metadata */
