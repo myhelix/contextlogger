@@ -69,6 +69,8 @@ RecordEvent(eventName string, metrics Metrics)
 
 Metrics is just another name for map[string]interface{}, same as log.Fields; and you might wonder what the difference between a metric with an event name and a log field with a log message is -- similar to ErrorReport vs. Error, this is really to provide a way to selectively send information to a different destination. The NewRelic log provider will take data from Record and add it to a newrelic.Transaction in the Context, and will put data from RecordEvent into a NewRelic Custom Event. But you could easily write a provider to send these anywhere you want to track some sort of metrics.
 
+The statsd provider uses this `Record` to record a gauge metric. `RecordEvent` is used for incrementing events.  
+
 ## Setting up the Default Provider
 
 Here's an example config which chains together all the built-in providers (except for dummy, which is just for startup and testing):

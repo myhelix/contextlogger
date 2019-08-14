@@ -22,6 +22,7 @@ func LogProvider(nextProvider providers.LogProvider, client *etsystatsd.StatsdCl
 	return provider{client, chaining.LogProvider(nextProvider)}, nil
 }
 
+// Record is equivalent to statsd's gauge() concept
 func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
 	statsToSend := make(map[string]string)
 	for k, v := range metrics {
@@ -32,6 +33,7 @@ func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
 	p.LogProvider.Record(ctx, metrics)
 }
 
+// RecordEvent the same as statsd.Increment()
 func (p provider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
 	p.sharedStatsdClient.Increment(eventName)
 	p.LogProvider.RecordEvent(ctx, eventName, metrics)
