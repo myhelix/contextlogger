@@ -6,13 +6,13 @@ package structured
 import (
 	"os"
 
-	"github.com/myhelix/contextlogger/providers/chaining"
-	"github.com/myhelix/contextlogger/providers/dummy"
+	"github.com/calm/contextlogger/providers/chaining"
+	"github.com/calm/contextlogger/providers/dummy"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/myhelix/contextlogger/log"
-	"github.com/myhelix/contextlogger/providers"
+	"github.com/calm/contextlogger/log"
+	"github.com/calm/contextlogger/providers"
 )
 
 var _ = Describe("bufferedLogProvider", func() {

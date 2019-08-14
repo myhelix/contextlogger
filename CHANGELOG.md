@@ -1,3 +1,7 @@
+## 2.0.0 (2019-08-11)
+- Fork myhelix contextlogger to calm
+- Add statsd contextlogger 
+
 ## 1.6.2 (2019-04-01)
 - Using newer Logrus and Merry versions which include some bug fixes
 
