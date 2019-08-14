@@ -9,8 +9,8 @@ is a merry error; otherwise it generates a new one based on the reporting callst
 package rollbar
 
 import (
+	"github.com/calm/rollbar"
 	goerr "github.com/go-errors/errors"
-	"github.com/myhelix/rollbar"
 
 	"github.com/calm/contextlogger/log"
 	"github.com/calm/contextlogger/providers"
