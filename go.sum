@@ -1,11 +1,13 @@
 github.com/ansel1/merry v1.3.2 h1:arfeLDVgsDqWf2jsKOA1LFOL48Sb3Af20coNTUZy4Ck=
 github.com/ansel1/merry v1.3.2/go.mod h1:qBYMZz+rgzOfZ3QACcTK7hE0bBMxvC0sKCok2t7bAhw=
+github.com/calm/rollbar v1.0.0/go.mod h1:ZklX+nmnUmc+iOyhnPuIOupHxcEYc4UT0PfCasfsTRk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/etsy/statsd v0.8.2 h1:wpzxAquSYFBxiPp5NE71DGu573EL8YDUX2PIrzo+0G0=
 github.com/etsy/statsd v0.8.2/go.mod h1:rmx2gVm1TEkQUIcU/KAM4prmC/AAUU8Wndeule9gvW4=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
+github.com/go-errors/errors v1.0.1/go.mod h1:f4zRHt4oKfwPJE5k8C9vpYG+aDHdBFUsgrm6/TyX73Q=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=
