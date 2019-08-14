@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/calm/contextlogger/providers"
 	"github.com/calm/contextlogger/providers/chaining"
 	etsystatsd "github.com/etsy/statsd/examples/go"
@@ -14,9 +15,9 @@ type provider struct {
 	providers.LogProvider
 }
 
-func LogProvider(nextProvider providers.LogProvider,  client *etsystatsd.StatsdClient) (providers.LogProvider, error) {
+func LogProvider(nextProvider providers.LogProvider, client *etsystatsd.StatsdClient) (providers.LogProvider, error) {
 	if client == nil {
-		return nil, errors.New("newRelicApp is required")
+		return nil, errors.New("statsd client is required")
 	}
 	return provider{client, chaining.LogProvider(nextProvider)}, nil
 }
@@ -35,4 +36,3 @@ func (p provider) RecordEvent(ctx context.Context, eventName string, metrics map
 	p.sharedStatsdClient.Increment(eventName)
 	p.LogProvider.RecordEvent(ctx, eventName, metrics)
 }
-
