@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/ansel1/merry"
-	"github.com/myhelix/contextlogger/providers"
-	cl_logrus "github.com/myhelix/contextlogger/providers/logrus"
+	"github.com/calm/contextlogger/providers"
+	cl_logrus "github.com/calm/contextlogger/providers/logrus"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )

@@ -8,8 +8,8 @@ itself generally compatible with the standard library logger.
 package log
 
 import (
-	"github.com/myhelix/contextlogger/providers"
-	"github.com/myhelix/contextlogger/providers/dummy"
+	"github.com/calm/contextlogger/providers"
+	"github.com/calm/contextlogger/providers/dummy"
 
 	"context"
 	"os"

@@ -77,12 +77,12 @@ Here's an example config which chains together all the built-in providers (excep
 // This assumes there's a "config" struct in this package where certain project config data is coming from.
 
 import (
-	"github.com/myhelix/contextlogger/log"
-	cl_logrus "github.com/myhelix/contextlogger/providers/logrus"
-	cl_merry "github.com/myhelix/contextlogger/providers/merry"
-	cl_newrelic "github.com/myhelix/contextlogger/providers/newrelic"
-	"github.com/myhelix/contextlogger/providers/reported_at"
-	cl_rollbar "github.com/myhelix/contextlogger/providers/rollbar"
+	"github.com/calm/contextlogger/log"
+	cl_logrus "github.com/calm/contextlogger/providers/logrus"
+	cl_merry "github.com/calm/contextlogger/providers/merry"
+	cl_newrelic "github.com/calm/contextlogger/providers/newrelic"
+	"github.com/calm/contextlogger/providers/reported_at"
+	cl_rollbar "github.com/calm/contextlogger/providers/rollbar"
 	"github.com/myhelix/rollbar"
 )
 

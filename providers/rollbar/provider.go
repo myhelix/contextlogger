@@ -12,9 +12,9 @@ import (
 	goerr "github.com/go-errors/errors"
 	"github.com/myhelix/rollbar"
 
-	"github.com/myhelix/contextlogger/log"
-	"github.com/myhelix/contextlogger/providers"
-	"github.com/myhelix/contextlogger/providers/chaining"
+	"github.com/calm/contextlogger/log"
+	"github.com/calm/contextlogger/providers"
+	"github.com/calm/contextlogger/providers/chaining"
 
 	"context"
 	"errors"

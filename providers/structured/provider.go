@@ -1,5 +1,4 @@
 // © 2017 Helix OpCo LLC. All rights reserved.
-// Initial Author: jpecknerhelix
 
 package structured
 
@@ -7,9 +6,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/myhelix/contextlogger/log"
-	"github.com/myhelix/contextlogger/providers"
-	"github.com/myhelix/contextlogger/providers/chaining"
+	"github.com/calm/contextlogger/log"
+	"github.com/calm/contextlogger/providers"
+	"github.com/calm/contextlogger/providers/chaining"
 )
 
 type LogCallArgs struct {
