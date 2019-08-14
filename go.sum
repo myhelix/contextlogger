@@ -1,5 +1,6 @@
 github.com/ansel1/merry v1.3.2 h1:arfeLDVgsDqWf2jsKOA1LFOL48Sb3Af20coNTUZy4Ck=
 github.com/ansel1/merry v1.3.2/go.mod h1:qBYMZz+rgzOfZ3QACcTK7hE0bBMxvC0sKCok2t7bAhw=
+github.com/calm/rollbar v0.4.2/go.mod h1:ZklX+nmnUmc+iOyhnPuIOupHxcEYc4UT0PfCasfsTRk=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/etsy/statsd v0.8.2 h1:wpzxAquSYFBxiPp5NE71DGu573EL8YDUX2PIrzo+0G0=
