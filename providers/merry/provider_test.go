@@ -76,3 +76,12 @@ func TestErrorMisc(t *testing.T) {
 	testProvider.Error(context.Background(), false, err, "foo", errors.New("bar"))
 	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it brokefoobar"`))
 }
+
+func TestErrorCause(t *testing.T) {
+	setup(t)
+
+	originalErr := merry.New("original error").WithValue("cause_foo", "cause_bar")
+	err := merry.New("it broke").WithCause(originalErr)
+	testProvider.Error(context.Background(), false, err)
+	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke: original error" cause="original error" cause_foo=cause_bar ~stackTrace=".*calm/contextlogger/providers/merry.*"`))
+}

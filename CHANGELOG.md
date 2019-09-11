@@ -1,3 +1,6 @@
+## 2.1.0 (2019-09-09)
+- Log values from merry.Cause
+
 ## 2.0.0 (2019-08-11)
 - Fork myhelix contextlogger to calm
 - Add statsd contextlogger 
