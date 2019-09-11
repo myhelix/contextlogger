@@ -29,6 +29,14 @@ func (p provider) extractContext(ctx context.Context, args []interface{}, includ
 	if len(args) == 1 {
 		if err, ok := args[0].(error); ok {
 			fields := make(log.Fields)
+
+			// merge cause error key values into the reporting error
+			if cause := merry.Cause(err); cause != nil {
+				for k, v := range merry.Values(cause) {
+					err = merry.WithValue(err, k, v)
+				}
+			}
+
 			for key, val := range merry.Values(err) {
 				if key, ok := key.(string); ok {
 					switch key {
@@ -36,6 +44,7 @@ func (p provider) extractContext(ctx context.Context, args []interface{}, includ
 					// Merry built-ins; ignore
 					case "user message":
 						fields["userMessage"] = val
+
 					default:
 						fields[key] = val
 					}
