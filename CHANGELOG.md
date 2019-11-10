@@ -1,3 +1,7 @@
+## 2.1.1 (2019-11-09)
+- add jenkins file
+- add main.sh 
+
 ## 2.1.0 (2019-09-09)
 - Log values from merry.Cause
 

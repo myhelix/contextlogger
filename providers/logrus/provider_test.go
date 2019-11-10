@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/calm/contextlogger/log"
-	"github.com/calm/contextlogger/providers"
+	"github.com/calm/contextlogger/v2/log"
+	"github.com/calm/contextlogger/v2/providers"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )

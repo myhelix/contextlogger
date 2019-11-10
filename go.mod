@@ -1,4 +1,4 @@
-module github.com/calm/contextlogger
+module github.com/calm/contextlogger/v2
 
 go 1.12
 

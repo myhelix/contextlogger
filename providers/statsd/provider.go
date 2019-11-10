@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/calm/contextlogger/providers"
-	"github.com/calm/contextlogger/providers/chaining"
+	"github.com/calm/contextlogger/v2/providers"
+	"github.com/calm/contextlogger/v2/providers/chaining"
 	etsystatsd "github.com/etsy/statsd/examples/go"
 )
 

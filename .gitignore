@@ -1,7 +1,5 @@
-.dockerignore
-.glide
 .idea
-build-scripts
-contextlogger-rev
-external
-vendor
+.vscode
+.DS_Store
+*coverprofile*
+tmp
