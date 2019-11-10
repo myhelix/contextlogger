@@ -7,6 +7,8 @@ This package provides newrelic metric/request reporting via ContextLogger
 package newrelic
 
 import (
+	newrelic "github.com/newrelic/go-agent"
+
 	"github.com/calm/contextlogger/v2/log"
 	"github.com/calm/contextlogger/v2/providers"
 	"github.com/calm/contextlogger/v2/providers/chaining"
