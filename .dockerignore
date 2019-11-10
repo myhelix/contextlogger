@@ -1,0 +1,10 @@
+.realize.yaml
+CHANGELOG.md
+Jenkinsfile*
+README.md
+.github/
+.idea
+.vscode
+.DS_Store
+*coverprofile*
+tmp
