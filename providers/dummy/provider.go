@@ -7,7 +7,7 @@ This package provides a basic dumb logger to get bootstrapped with
 package dummy
 
 import (
-	"github.com/calm/contextlogger/providers"
+	"github.com/calm/contextlogger/v2/providers"
 
 	"context"
 	"fmt"

@@ -7,9 +7,9 @@ This adds a field to log reports showing where the logger was called from
 package reported_at
 
 import (
-	"github.com/calm/contextlogger/log"
-	"github.com/calm/contextlogger/providers"
-	"github.com/calm/contextlogger/providers/chaining"
+	"github.com/calm/contextlogger/v2/log"
+	"github.com/calm/contextlogger/v2/providers"
+	"github.com/calm/contextlogger/v2/providers/chaining"
 
 	"context"
 	"fmt"

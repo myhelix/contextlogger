@@ -8,8 +8,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/calm/contextlogger/providers"
-	cl_logrus "github.com/calm/contextlogger/providers/logrus"
+	"github.com/calm/contextlogger/v2/providers"
+	cl_logrus "github.com/calm/contextlogger/v2/providers/logrus"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )

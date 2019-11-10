@@ -8,8 +8,8 @@ itself generally compatible with the standard library logger.
 package log
 
 import (
-	"github.com/calm/contextlogger/providers"
-	"github.com/calm/contextlogger/providers/dummy"
+	"github.com/calm/contextlogger/v2/providers"
+	"github.com/calm/contextlogger/v2/providers/dummy"
 
 	"context"
 	"os"

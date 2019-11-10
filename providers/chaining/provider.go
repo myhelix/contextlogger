@@ -8,7 +8,7 @@ LogProvider interface methods that don't panic if we're the last in the chain.
 package chaining
 
 import (
-	"github.com/calm/contextlogger/providers"
+	"github.com/calm/contextlogger/v2/providers"
 
 	"context"
 )
