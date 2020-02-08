@@ -3,9 +3,9 @@ module github.com/calm/contextlogger/v2
 go 1.12
 
 require (
+	github.com/DataDog/datadog-go v3.4.0+incompatible
 	github.com/ansel1/merry v1.3.2
 	github.com/calm/rollbar v1.0.0
-	github.com/etsy/statsd v0.8.2
 	github.com/go-errors/errors v1.0.1
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/newrelic/go-agent v1.11.0
