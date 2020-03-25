@@ -17,7 +17,6 @@ environment() {
   check_github_access_token
   export AWS_DEFAULT_REGION=us-east-1
   export GIT_VER=$(git rev-parse --short HEAD)
-  export COMPOSE_NETWORK=${SERVICE_NAME}_${GIT_VER}
 
   if [[ ${ON_JENKINS} == true ]]; then
       echo "On Jenkins! Not doing any environment setup"
@@ -68,10 +67,6 @@ check_github_access_token() {
   fi
 }
 
-cleanup_compose_network() {
-  docker network rm ${COMPOSE_NETWORK} || true > /dev/null 2>&1 # ignore missing network
-}
-
 cleanup_compose_containers() {
   docker-compose down -t 1 --remove-orphans > /dev/null 2>&1
   docker volume prune -f
@@ -79,14 +74,7 @@ cleanup_compose_containers() {
 
 cleanup_compose() {
   cleanup_compose_containers
-  cleanup_compose_network
 }
-
-make_docker_network() {
-  cleanup_compose_network
-  docker network create -d bridge ${COMPOSE_NETWORK}
-}
-
 
 cmd_build() {
   environment

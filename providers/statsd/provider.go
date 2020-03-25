@@ -5,36 +5,32 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/DataDog/datadog-go/statsd"
 	"github.com/calm/contextlogger/v2/providers"
 	"github.com/calm/contextlogger/v2/providers/chaining"
-	etsystatsd "github.com/etsy/statsd/examples/go"
 )
 
 type provider struct {
-	sharedStatsdClient *etsystatsd.StatsdClient // This has to be passed in; we can't import package config
+	sharedStatsdClient *statsd.Client // This has to be passed in; we can't import package config
 	providers.LogProvider
 }
 
-func LogProvider(nextProvider providers.LogProvider, client *etsystatsd.StatsdClient) (providers.LogProvider, error) {
+func LogProvider(nextProvider providers.LogProvider, client *statsd.Client) (providers.LogProvider, error) {
 	if client == nil {
 		return nil, errors.New("statsd client is required")
 	}
 	return provider{client, chaining.LogProvider(nextProvider)}, nil
 }
 
-// Record is equivalent to statsd's gauge() concept
 func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
-	statsToSend := make(map[string]string)
-	for k, v := range metrics {
-		statsToSend[k] = fmt.Sprintf("%d|g", v)
+	for key, value := range metrics {
+		p.sharedStatsdClient.SimpleEvent(key, fmt.Sprintf("%d|g", value))
 	}
-
-	p.sharedStatsdClient.Send(statsToSend, 1)
 	p.LogProvider.Record(ctx, metrics)
 }
 
 // RecordEvent the same as statsd.Increment()
 func (p provider) RecordEvent(ctx context.Context, eventName string, metrics map[string]interface{}) {
-	p.sharedStatsdClient.Increment(eventName)
+	p.sharedStatsdClient.Incr(eventName, make([]string, 0), float64(1))
 	p.LogProvider.RecordEvent(ctx, eventName, metrics)
 }
