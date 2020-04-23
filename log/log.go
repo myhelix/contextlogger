@@ -10,6 +10,7 @@ package log
 import (
 	"github.com/calm/contextlogger/v2/providers"
 	"github.com/calm/contextlogger/v2/providers/dummy"
+	"github.com/calm/contextlogger/v2/sanitizer"
 
 	"context"
 	"os"
@@ -126,7 +127,8 @@ func (c contextLogger) WithField(key string, val interface{}) ContextLogger {
 	return c.WithFields(fields)
 }
 func (c contextLogger) WithFields(fields Fields) ContextLogger {
-	return contextLogger{ContextWithFields(c.Context, fields), c.provider}
+	anonFields := sanitizer.Sanitize(fields, nil).(Fields)
+	return contextLogger{ContextWithFields(c.Context, anonFields), c.provider}
 }
 
 // This is mostly for use by LogProviders; adds fields to a raw context.Context
