@@ -91,6 +91,7 @@ func (c contextLogger) LogProvider() providers.LogProvider {
 	return c.provider
 }
 func (c contextLogger) ErrorReport(args ...interface{}) {
+	c.Info("reporting error to provider")
 	c.provider.Error(c.Context, true, args...)
 }
 func (c contextLogger) Error(args ...interface{}) {

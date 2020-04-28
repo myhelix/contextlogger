@@ -97,8 +97,10 @@ func (p provider) reportToRollbar(ctx context.Context, level string, errs ...int
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
 	if report {
+		fmt.Println("Reporting to rollbar")
 		p.reportToRollbar(ctx, rollbar.ERR, args...)
 	}
+	fmt.Println("reporting to log provider")
 	p.LogProvider.Error(ctx, report, args...)
 }
 
