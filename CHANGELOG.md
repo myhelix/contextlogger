@@ -1,3 +1,6 @@
+## 1.6.3 (2021-02-11)
+- Use go.mod instead of glade
+
 ## 1.6.2 (2019-04-01)
 - Using newer Logrus and Merry versions which include some bug fixes
 
