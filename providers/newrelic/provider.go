@@ -7,11 +7,11 @@ This package provides newrelic metric/request reporting via ContextLogger
 package newrelic
 
 import (
-	"github.com/newrelic/go-agent"
+	newrelic "github.com/newrelic/go-agent"
 
-	"github.com/myhelix/contextlogger/log"
-	"github.com/myhelix/contextlogger/providers"
-	"github.com/myhelix/contextlogger/providers/chaining"
+	"github.com/myhelix/contextlogger/v2/log"
+	"github.com/myhelix/contextlogger/v2/providers"
+	"github.com/myhelix/contextlogger/v2/providers/chaining"
 
 	"context"
 	"errors"

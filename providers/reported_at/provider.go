@@ -7,9 +7,9 @@ This adds a field to log reports showing where the logger was called from
 package reported_at
 
 import (
-	"github.com/myhelix/contextlogger/log"
-	"github.com/myhelix/contextlogger/providers"
-	"github.com/myhelix/contextlogger/providers/chaining"
+	"github.com/myhelix/contextlogger/v2/log"
+	"github.com/myhelix/contextlogger/v2/providers"
+	"github.com/myhelix/contextlogger/v2/providers/chaining"
 
 	"context"
 	"fmt"

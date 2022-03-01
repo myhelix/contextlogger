@@ -7,8 +7,8 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/myhelix/contextlogger/log"
-	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/v2/log"
+	"github.com/myhelix/contextlogger/v2/providers"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )

@@ -1,4 +1,4 @@
-module github.com/myhelix/contextlogger
+module github.com/myhelix/contextlogger/v2
 
 go 1.16
 
