@@ -8,8 +8,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/myhelix/contextlogger/providers"
-	cl_logrus "github.com/myhelix/contextlogger/providers/logrus"
+	"github.com/myhelix/contextlogger/v2/providers"
+	cl_logrus "github.com/myhelix/contextlogger/v2/providers/logrus"
 	. "github.com/onsi/gomega"
 	"github.com/sirupsen/logrus"
 )

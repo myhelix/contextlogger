@@ -7,7 +7,7 @@ This package provides a basic dumb logger to get bootstrapped with
 package dummy
 
 import (
-	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/v2/providers"
 
 	"context"
 	"fmt"
