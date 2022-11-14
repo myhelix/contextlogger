@@ -1,0 +1,17 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ master ]
+  schedule:
+    # Runs at 15:00 UTC every Monday
+    - cron: '0 15 * * 1'
+
+jobs:
+  call-workflow:
+    uses: myhelix/security-workflows/.github/workflows/codeql-analysis-go.yml@v1.0.0
+    secrets:
+      go-modules-token: ${{ secrets.GO_MODULES_TOKEN }}
