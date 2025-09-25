@@ -7,7 +7,7 @@ This package provides newrelic metric/request reporting via ContextLogger
 package newrelic
 
 import (
-	"github.com/newrelic/go-agent"
+	"github.com/newrelic/go-agent/v3/newrelic"
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
@@ -18,11 +18,11 @@ import (
 )
 
 type provider struct {
-	newRelicApp newrelic.Application // This has to be passed in; we can't import package config
+	newRelicApp *newrelic.Application // This has to be passed in; we can't import package config
 	providers.LogProvider
 }
 
-func LogProvider(nextProvider providers.LogProvider, newRelicApp newrelic.Application) (providers.LogProvider, error) {
+func LogProvider(nextProvider providers.LogProvider, newRelicApp *newrelic.Application) (providers.LogProvider, error) {
 	if newRelicApp == nil {
 		return nil, errors.New("newRelicApp is required")
 	}
@@ -31,12 +31,12 @@ func LogProvider(nextProvider providers.LogProvider, newRelicApp newrelic.Applic
 
 type contextNewRelicTxnKey struct{}
 
-func WithTransaction(ctx context.Context, txn newrelic.Transaction) log.ContextLogger {
+func WithTransaction(ctx context.Context, txn *newrelic.Transaction) log.ContextLogger {
 	return log.FromContext(context.WithValue(ctx, contextNewRelicTxnKey{}, txn))
 }
 
-func TxnFrom(ctx context.Context) newrelic.Transaction {
-	if txn, ok := ctx.Value(contextNewRelicTxnKey{}).(newrelic.Transaction); ok {
+func TxnFrom(ctx context.Context) *newrelic.Transaction {
+	if txn, ok := ctx.Value(contextNewRelicTxnKey{}).(*newrelic.Transaction); ok {
 		return txn
 	}
 	return nil
@@ -48,7 +48,7 @@ func (p provider) Record(ctx context.Context, metrics map[string]interface{}) {
 			txn.AddAttribute(k, v)
 		}
 	} else {
-		log.FromContext(ctx).ErrorReport(errors.New("Attempted to record metric in context without NewRelic transaction"))
+		log.FromContext(ctx).ErrorReport(errors.New("attempted to record metric in context without NewRelic transaction"))
 	}
 	p.LogProvider.Record(ctx, metrics)
 }
