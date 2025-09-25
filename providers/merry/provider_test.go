@@ -9,7 +9,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ansel1/merry"
+	"github.com/ansel1/merry/v2"
 	"github.com/myhelix/contextlogger/providers"
 	cl_logrus "github.com/myhelix/contextlogger/providers/logrus"
 	. "github.com/onsi/gomega"
@@ -24,9 +24,9 @@ func setup(t *testing.T) {
 
 	output = new(bytes.Buffer)
 	outputProvider, err := cl_logrus.LogProvider(nil, cl_logrus.Config{
-		output,
-		"debug",
-		&logrus.TextFormatter{
+		Output: output,
+		Level:  "debug",
+		Formatter: &logrus.TextFormatter{
 			DisableColors:   true,
 			TimestampFormat: "sometime", // Omit timestamp to make output predictable
 		},
@@ -38,21 +38,21 @@ func setup(t *testing.T) {
 func TestValueExtraction(t *testing.T) {
 	setup(t)
 
-	testProvider.Info(context.Background(), false, merry.New("it broke").WithValue("how", "badly"))
+	testProvider.Info(context.Background(), false, merry.Wrap(merry.New("it broke"), merry.WithValue("how", "badly")))
 	Expect(output.String()).To(MatchRegexp(`time=sometime level=info msg="it broke" how=badly`))
 }
 
 func TestUserMessage(t *testing.T) {
 	setup(t)
 
-	testProvider.Info(context.Background(), false, merry.New("it broke").WithUserMessage("all good"))
+	testProvider.Info(context.Background(), false, merry.Wrap(merry.New("it broke"), merry.WithUserMessage("all good")))
 	Expect(output.String()).To(MatchRegexp(`time=sometime level=info msg="it broke" userMessage="all good"`))
 }
 
 func TestMerryTraceback(t *testing.T) {
 	setup(t)
 
-	err := merry.New("it broke").WithValue("how", "badly")
+	err := merry.Wrap(merry.New("it broke"), merry.WithValue("how", "badly"))
 
 	testProvider.Error(context.Background(), false, err)
 	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it broke" how=badly ~stackTrace=".*myhelix/contextlogger/providers/merry.*"`))
@@ -71,7 +71,7 @@ func TestErrorTraceback(t *testing.T) {
 func TestErrorMisc(t *testing.T) {
 	setup(t)
 
-	err := merry.New("it broke").WithValue("how", "badly")
+	err := merry.Wrap(merry.New("it broke"), merry.WithValue("how", "badly"))
 
 	testProvider.Error(context.Background(), false, err, "foo", errors.New("bar"))
 	Expect(output.String()).To(MatchRegexp(`time=sometime level=error msg="it brokefoobar"`))
