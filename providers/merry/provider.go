@@ -7,7 +7,7 @@ This extracts merry Values into logger Fields, then passes along to the base log
 package merry
 
 import (
-	"github.com/ansel1/merry"
+	"github.com/ansel1/merry/v2"
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
@@ -30,15 +30,13 @@ func (p provider) extractContext(ctx context.Context, args []interface{}, includ
 		if err, ok := args[0].(error); ok {
 			fields := make(log.Fields)
 			for key, val := range merry.Values(err) {
+				// Allow all string values into log message
 				if key, ok := key.(string); ok {
-					switch key {
-					case "stack", "message":
-					// Merry built-ins; ignore
-					case "user message":
-						fields["userMessage"] = val
-					default:
-						fields[key] = val
-					}
+					fields[key] = val
+				}
+				// Add userMessage
+				if usrMsg := merry.UserMessage(err); usrMsg != "" {
+					fields["userMessage"] = usrMsg
 				}
 			}
 			// Call merry.Wrap to generate trace for non-merry errors; that trace will be to
