@@ -8,7 +8,7 @@ import (
 
 	"github.com/myhelix/contextlogger/providers/chaining"
 	"github.com/myhelix/contextlogger/providers/dummy"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/myhelix/contextlogger/log"
