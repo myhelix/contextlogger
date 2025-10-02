@@ -7,7 +7,7 @@ This extracts merry Values into logger Fields, then passes along to the base log
 package merry
 
 import (
-	"github.com/ansel1/merry"
+	"github.com/ansel1/merry/v2"
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
