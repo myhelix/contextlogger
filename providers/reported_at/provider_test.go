@@ -22,12 +22,13 @@ func setup(t *testing.T, config Config) {
 
 	output = new(bytes.Buffer)
 	outputProvider, err := cl_logrus.LogProvider(nil, cl_logrus.Config{
-		output,
-		"debug",
-		&logrus.TextFormatter{
+		Output: output,
+		Level:  "debug",
+		Formatter: &logrus.TextFormatter{
 			DisableColors:   true,
 			TimestampFormat: "sometime", // Omit timestamp to make output predictable
 		},
+		FlattenDataDogFields: false,
 	})
 	Expect(err).To(BeNil())
 	testProvider = LogProvider(outputProvider, config)

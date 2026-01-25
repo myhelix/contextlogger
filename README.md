@@ -1,4 +1,5 @@
 # ContextLogger
+
 This project provides a pluggable, context-based logging, error reporting, and performance metrics interface for golang.
 
 The "log" package is largely compatible with [Logrus](https://github.com/sirupsen/logrus), and Logrus can be used for output.
@@ -32,7 +33,7 @@ DebugReport(    args ...interface{})
 Debug(          args ...interface{})
 ```
 
-The distinction between, e.g., "Error" and "ErrorReport" is up to you to define in your environment. At Helix, we use it to distinguish between "this broke, and a human needs to look at it" (ErrorReport) and "this broke, but just make a note of it, don't wake anyone up" (Error). Having does-someone-get-notified be an explicit dimension independent from severity has worked out well for managing our on-call quality of life, but YMMV; if you don't like the *Report methods, just ignore them.
+The distinction between, e.g., "Error" and "ErrorReport" is up to you to define in your environment. At Helix, we use it to distinguish between "this broke, and a human needs to look at it" (ErrorReport) and "this broke, but just make a note of it, don't wake anyone up" (Error). Having does-someone-get-notified be an explicit dimension independent from severity has worked out well for managing our on-call quality of life, but YMMV; if you don't like the \*Report methods, just ignore them.
 
 ## Adding Log Fields
 
@@ -68,6 +69,66 @@ RecordEvent(eventName string, metrics Metrics)
 ```
 
 Metrics is just another name for map[string]interface{}, same as log.Fields; and you might wonder what the difference between a metric with an event name and a log field with a log message is -- similar to ErrorReport vs. Error, this is really to provide a way to selectively send information to a different destination. The NewRelic log provider will take data from Record and add it to a newrelic.Transaction in the Context, and will put data from RecordEvent into a NewRelic Custom Event. But you could easily write a provider to send these anywhere you want to track some sort of metrics.
+
+## DataDog Lambda Extension Compatibility
+
+When using contextlogger in AWS Lambda with the DataDog Lambda Extension, you can enable special handling of DataDog trace correlation fields. The Extension requires specific fields (`dd.trace_id`, `dd.span_id`, `lambda.request_id`) at the **root level** of JSON output for automatic log-trace correlation.
+
+To enable this feature, set `FlattenDataDogFields: true` in the logrus Config:
+
+```go
+logProvider, err := cl_logrus.LogProvider(nil, cl_logrus.Config{
+    Output:               os.Stderr,
+    Level:                "info",
+    Formatter:            cl_logrus.JSONFormatter,
+    FlattenDataDogFields: true,  // Enable DataDog Extension compatibility
+})
+```
+
+### How It Works
+
+When enabled, the logrus provider will:
+
+1. Detect DataDog-specific fields: `dd.trace_id`, `dd.span_id`, `lambda.request_id`
+2. Promote these fields to the root level of JSON output
+3. Keep all other fields nested in a `context` object
+4. Preserve backward compatibility when disabled (default behavior)
+
+### Example Output
+
+**With `FlattenDataDogFields: true`:**
+
+```json
+{
+  "message": "Processing request",
+  "level": "info",
+  "time": "2026-01-25T10:30:00Z",
+  "dd.trace_id": "1234567890",
+  "dd.span_id": "9876543210",
+  "lambda.request_id": "abc-123-def",
+  "context": {
+    "user_id": "12345",
+    "other_field": "value"
+  }
+}
+```
+
+**With `FlattenDataDogFields: false` (default):**
+
+```json
+{
+  "message": "Processing request",
+  "level": "info",
+  "time": "2026-01-25T10:30:00Z",
+  "dd.trace_id": "1234567890",
+  "dd.span_id": "9876543210",
+  "lambda.request_id": "abc-123-def",
+  "user_id": "12345",
+  "other_field": "value"
+}
+```
+
+This feature is opt-in and maintains full backward compatibility with existing code.
 
 ## Setting up the Default Provider
 
@@ -158,4 +219,3 @@ func configureLogging() error {
 	return nil
 }
 ```
-
