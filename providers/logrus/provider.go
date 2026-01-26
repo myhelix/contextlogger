@@ -16,6 +16,8 @@ import (
 	"context"
 	"io"
 	"time"
+
+	dd_logrus "github.com/DataDog/dd-trace-go/contrib/sirupsen/logrus/v2"
 )
 
 type provider struct {
@@ -46,12 +48,19 @@ func LogProvider(nextProvider providers.LogProvider, config Config) (l providers
 		return
 	}
 
-	l = provider{logrus.NewEntry(&logrus.Logger{
+	logger := &logrus.Logger{
 		Out:       config.Output,
 		Formatter: config.Formatter,
 		Hooks:     make(logrus.LevelHooks),
 		Level:     level,
-	}), chaining.LogProvider(nextProvider)}
+	}
+
+	// Register Datadog context hook for trace correlation
+	// This automatically injects dd.trace_id, dd.span_id, dd.service, dd.env, dd.version
+	// when logging with a context that has an active tracer span
+	logger.AddHook(&dd_logrus.DDContextLogHook{})
+
+	l = provider{logrus.NewEntry(logger), chaining.LogProvider(nextProvider)}
 	return
 }
 
