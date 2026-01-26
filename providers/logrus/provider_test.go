@@ -5,8 +5,11 @@ package logrus
 
 import (
 	"bytes"
+	"context"
+	"encoding/json"
 	"testing"
 
+	"github.com/DataDog/dd-trace-go/v2/ddtrace/tracer"
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
 	. "github.com/onsi/gomega"
@@ -67,4 +70,71 @@ func TestJSONLogsMultiline(t *testing.T) {
 	expected := `{"level":"error","long_string":"This\n\tis\n\ta\n\tmultiline\n\tstring","msg":"Another\n\tgreat\n\tmultiline\n\tstring"}`
 
 	Expect(output.String()).To(MatchJSON(expected))
+}
+
+func setupProviderWithJSONOutput(t *testing.T) (*bytes.Buffer, providers.LogProvider) {
+	RegisterTestingT(t)
+
+	output := new(bytes.Buffer)
+	provider, err := LogProvider(nil, Config{
+		output,
+		"info",
+		&logrus.JSONFormatter{
+			DisableTimestamp: true,
+		},
+	})
+	Expect(err).To(BeNil())
+	return output, provider
+}
+
+func startTestTracer() {
+	tracer.Start(
+		tracer.WithService("test-service"),
+		tracer.WithEnv("test-env"),
+		tracer.WithServiceVersion("v1.0.0"),
+	)
+}
+
+func parseJSONLog(output *bytes.Buffer) map[string]interface{} {
+	var logEntry map[string]interface{}
+	err := json.Unmarshal(output.Bytes(), &logEntry)
+	Expect(err).To(BeNil())
+	return logEntry
+}
+
+func TestDatadogTraceCorrelation_WithSpan(t *testing.T) {
+	output, provider := setupProviderWithJSONOutput(t)
+
+	startTestTracer()
+	defer tracer.Stop()
+
+	span, ctx := tracer.StartSpanFromContext(context.Background(), "test.operation")
+	defer span.Finish()
+
+	provider.Info(ctx, false, "test message")
+
+	logEntry := parseJSONLog(output)
+
+	Expect(logEntry).To(HaveKey("dd.trace_id"))
+	Expect(logEntry).To(HaveKey("dd.span_id"))
+	Expect(logEntry["dd.trace_id"]).ToNot(BeEmpty())
+	Expect(logEntry["dd.span_id"]).ToNot(BeEmpty())
+	Expect(logEntry["msg"]).To(Equal("test message"))
+	Expect(logEntry["level"]).To(Equal("info"))
+}
+
+func TestDatadogTraceCorrelation_WithoutSpan(t *testing.T) {
+	output, provider := setupProviderWithJSONOutput(t)
+
+	provider.Info(context.Background(), false, "test message without span")
+
+	logEntry := parseJSONLog(output)
+
+	Expect(logEntry).ToNot(HaveKey("dd.trace_id"))
+	Expect(logEntry).ToNot(HaveKey("dd.span_id"))
+	Expect(logEntry).ToNot(HaveKey("dd.service"))
+	Expect(logEntry).ToNot(HaveKey("dd.env"))
+	Expect(logEntry).ToNot(HaveKey("dd.version"))
+	Expect(logEntry["msg"]).To(Equal("test message without span"))
+	Expect(logEntry["level"]).To(Equal("info"))
 }

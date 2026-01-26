@@ -7,6 +7,7 @@ This package provides a concrete implementation of LogProvider using Logrus
 package logrus
 
 import (
+	dd_logrus "github.com/DataDog/dd-trace-go/contrib/sirupsen/logrus/v2"
 	"github.com/sirupsen/logrus"
 
 	"github.com/myhelix/contextlogger/log"
@@ -16,8 +17,6 @@ import (
 	"context"
 	"io"
 	"time"
-
-	dd_logrus "github.com/DataDog/dd-trace-go/contrib/sirupsen/logrus/v2"
 )
 
 type provider struct {
