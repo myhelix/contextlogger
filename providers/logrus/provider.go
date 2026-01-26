@@ -65,7 +65,7 @@ func LogProvider(nextProvider providers.LogProvider, config Config) (l providers
 }
 
 func (p provider) entryFor(ctx context.Context) *logrus.Entry {
-	return p.Entry.WithFields(logrus.Fields(log.FieldsFromContext(ctx)))
+	return p.Entry.WithContext(ctx).WithFields(logrus.Fields(log.FieldsFromContext(ctx)))
 }
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
