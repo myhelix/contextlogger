@@ -1,6 +1,6 @@
 module github.com/myhelix/contextlogger
 
-go 1.24.0
+go 1.24
 
 require (
 	github.com/DataDog/dd-trace-go/contrib/sirupsen/logrus/v2 v2.5.0
