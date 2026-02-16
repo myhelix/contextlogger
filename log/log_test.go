@@ -1,16 +1,20 @@
 package log_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers"
+	"github.com/myhelix/contextlogger/providers/logrus"
 	"github.com/myhelix/contextlogger/providers/merry"
 	"github.com/myhelix/contextlogger/providers/reported_at"
 	"github.com/myhelix/contextlogger/providers/structured"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	logrusLib "github.com/sirupsen/logrus"
 )
 
 func TestLog(t *testing.T) {
@@ -157,6 +161,49 @@ var _ = Describe("ReportableError Field Injection", func() {
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
 			Expect(calls[0].ContextFields).To(HaveKeyWithValue("existingField", "existingValue"))
+		})
+	})
+
+	Describe("End-to-End Test with Logrus", func() {
+		var (
+			buf            *bytes.Buffer
+			logrusProvider providers.LogProvider
+		)
+
+		BeforeEach(func() {
+			buf = new(bytes.Buffer)
+			var err error
+			logrusProvider, err = logrus.LogProvider(nil, logrus.Config{
+				Output: buf,
+				Level:  "debug",
+				Formatter: &logrusLib.JSONFormatter{
+					DisableTimestamp: true,
+				},
+			})
+			Expect(err).NotTo(HaveOccurred())
+			log.SetDefaultProvider(logrusProvider)
+		})
+
+		It("TestErrorReport_WithLogrus_OutputContainsReportableError", func() {
+			log.ErrorReport("test error with logrus")
+
+			var output map[string]interface{}
+			err := json.Unmarshal(buf.Bytes(), &output)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(output).To(HaveKeyWithValue("reportableError", true))
+			Expect(output).To(HaveKeyWithValue("level", "error"))
+			Expect(output).To(HaveKeyWithValue("msg", "test error with logrus"))
+		})
+
+		It("TestError_WithLogrus_OutputDoesNotContainReportableError", func() {
+			log.Error("test error with logrus")
+
+			var output map[string]interface{}
+			err := json.Unmarshal(buf.Bytes(), &output)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(output).NotTo(HaveKey("reportableError"))
+			Expect(output).To(HaveKeyWithValue("level", "error"))
+			Expect(output).To(HaveKeyWithValue("msg", "test error with logrus"))
 		})
 	})
 })
