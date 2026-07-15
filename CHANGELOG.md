@@ -1,3 +1,6 @@
+## 1.7.0 (2026-07-15)
+- Add `providers/datadog_errors`: injects Datadog Error Tracking fields (`error.kind`, `error.message`, `error.stack`) on reported errors (ErrorReport/WarnReport). Companion to the `reportable` provider (PR #34). See DSI-1454.
+
 ## 1.6.2 (2019-04-01)
 - Using newer Logrus and Merry versions which include some bug fixes
 
