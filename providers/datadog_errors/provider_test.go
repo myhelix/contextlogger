@@ -91,3 +91,40 @@ func TestWarnReportInjects(t *testing.T) {
 	testProvider.Warn(context.Background(), true, errors.New("warn broke"))
 	Expect(output.String()).To(MatchRegexp(`error\.message="warn broke"`))
 }
+
+// An error passed alongside extra args (the common ErrorReport(err, "context")
+// shape) must still be enriched — we scan all args, not just a lone one.
+func TestReportInjectsWithExtraArgs(t *testing.T) {
+	setup(t)
+
+	testProvider.Error(context.Background(), true, errors.New("it broke"), "extra context", 42)
+	out := output.String()
+	Expect(out).To(MatchRegexp(`error\.kind=`))
+	Expect(out).To(MatchRegexp(`error\.message="it broke"`))
+	Expect(out).To(MatchRegexp(`error\.stack=`))
+}
+
+// A typed-nil error (nil pointer stored in an error interface) satisfies the
+// error type assertion but would panic on err.Error(); it must be treated as
+// absent, not crash the report path.
+type typedNilErr struct{}
+
+func (*typedNilErr) Error() string { return "should never be called" }
+
+func TestTypedNilErrorDoesNotPanic(t *testing.T) {
+	setup(t)
+
+	var e *typedNilErr // nil pointer, non-nil error interface
+	Expect(func() {
+		testProvider.Error(context.Background(), true, error(e))
+	}).NotTo(Panic())
+	Expect(output.String()).NotTo(ContainSubstring("error.kind"))
+}
+
+// When several args are errors, the first non-nil error wins.
+func TestFirstNonNilErrorWins(t *testing.T) {
+	setup(t)
+
+	testProvider.Error(context.Background(), true, "leading string", errors.New("the real error"), errors.New("second"))
+	Expect(output.String()).To(MatchRegexp(`error\.message="the real error"`))
+}

@@ -64,14 +64,34 @@ func errorKind(err error) string {
 	return t.String()
 }
 
-// injectIfReport adds Datadog error.* fields when this is a report and the
-// first argument is an error.
+// firstError returns the first non-nil error among args, or nil if there is
+// none. It guards against typed-nil interfaces (e.g. a (*myErr)(nil) stored in
+// an error interface), which satisfy the error type assertion but panic on
+// err.Error(); such values are treated as absent.
+func firstError(args []interface{}) error {
+	for _, a := range args {
+		err, ok := a.(error)
+		if !ok || err == nil {
+			continue
+		}
+		// Catch typed-nil: a non-nil interface wrapping a nil pointer.
+		if v := reflect.ValueOf(err); v.Kind() == reflect.Ptr && v.IsNil() {
+			continue
+		}
+		return err
+	}
+	return nil
+}
+
+// injectIfReport adds Datadog error.* fields when this is a report and one of
+// the args is a non-nil error. It scans all args (not just the first) so that
+// calls like ErrorReport(err, "context", kv...) still enrich the event.
 func (p provider) injectIfReport(ctx context.Context, report bool, args []interface{}) context.Context {
-	if !report || len(args) != 1 {
+	if !report {
 		return ctx
 	}
-	err, ok := args[0].(error)
-	if !ok {
+	err := firstError(args)
+	if err == nil {
 		return ctx
 	}
 	// merry.Wrap generates a stack for non-merry errors and preserves an
