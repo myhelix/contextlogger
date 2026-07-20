@@ -128,3 +128,21 @@ func TestFirstNonNilErrorWins(t *testing.T) {
 	testProvider.Error(context.Background(), true, "leading string", errors.New("the real error"), errors.New("second"))
 	Expect(output.String()).To(MatchRegexp(`error\.message="the real error"`))
 }
+
+// Info/Debug must NOT inject error.* fields even on report=true — this
+// provider's contract is ErrorReport/WarnReport only.
+func TestInfoReportDoesNotInject(t *testing.T) {
+	setup(t)
+
+	testProvider.Info(context.Background(), true, errors.New("info with error"))
+	Expect(output.String()).NotTo(ContainSubstring("error.kind"))
+	Expect(output.String()).NotTo(ContainSubstring("error.stack"))
+}
+
+func TestDebugReportDoesNotInject(t *testing.T) {
+	setup(t)
+
+	testProvider.Debug(context.Background(), true, errors.New("debug with error"))
+	Expect(output.String()).NotTo(ContainSubstring("error.kind"))
+	Expect(output.String()).NotTo(ContainSubstring("error.stack"))
+}

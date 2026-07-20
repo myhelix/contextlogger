@@ -112,10 +112,15 @@ func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
 	p.LogProvider.Warn(p.injectIfReport(ctx, report, args), report, args...)
 }
 
+// Info and Debug deliberately do NOT inject error.* fields, even on report=true
+// (InfoReport/DebugReport). This provider's contract is ErrorReport/WarnReport
+// only. In practice Datadog Error Tracking wouldn't ingest info/debug anyway
+// (its status gate is ERROR/CRITICAL/ALERT/EMERGENCY), but we skip injection so
+// the fields don't appear as noise on sub-error logs.
 func (p provider) Info(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Info(p.injectIfReport(ctx, report, args), report, args...)
+	p.LogProvider.Info(ctx, report, args...)
 }
 
 func (p provider) Debug(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Debug(p.injectIfReport(ctx, report, args), report, args...)
+	p.LogProvider.Debug(ctx, report, args...)
 }
