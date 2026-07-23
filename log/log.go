@@ -33,6 +33,8 @@ func init() {
 	defaultProvider = dummy.LogProvider(os.Stderr)
 }
 
+var reportFields = Fields{"reportableError": true}
+
 /* Keys for Context Values */
 type contextLogProviderKey struct{}
 type contextLogFieldsKey struct{}
@@ -91,25 +93,25 @@ func (c contextLogger) LogProvider() providers.LogProvider {
 	return c.provider
 }
 func (c contextLogger) ErrorReport(args ...interface{}) {
-	c.provider.Error(c.Context, true, args...)
+	c.provider.Error(contextWithReportFields(c.Context), true, args...)
 }
 func (c contextLogger) Error(args ...interface{}) {
 	c.provider.Error(c.Context, false, args...)
 }
 func (c contextLogger) WarnReport(args ...interface{}) {
-	c.provider.Warn(c.Context, true, args...)
+	c.provider.Warn(contextWithReportFields(c.Context), true, args...)
 }
 func (c contextLogger) Warn(args ...interface{}) {
 	c.provider.Warn(c.Context, false, args...)
 }
 func (c contextLogger) InfoReport(args ...interface{}) {
-	c.provider.Info(c.Context, true, args...)
+	c.provider.Info(contextWithReportFields(c.Context), true, args...)
 }
 func (c contextLogger) Info(args ...interface{}) {
 	c.provider.Info(c.Context, false, args...)
 }
 func (c contextLogger) DebugReport(args ...interface{}) {
-	c.provider.Debug(c.Context, true, args...)
+	c.provider.Debug(contextWithReportFields(c.Context), true, args...)
 }
 func (c contextLogger) Debug(args ...interface{}) {
 	c.provider.Debug(c.Context, false, args...)
@@ -149,6 +151,10 @@ func FieldsFromContext(ctx context.Context) Fields {
 		return fields
 	}
 	return make(Fields)
+}
+
+func contextWithReportFields(ctx context.Context) context.Context {
+	return ContextWithFields(ctx, reportFields)
 }
 
 func ContextWithStack(ctx context.Context, stack []uintptr) context.Context {

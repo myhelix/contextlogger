@@ -1,3 +1,13 @@
+## 1.8.0 (2026-02-16)
+Features:
+- Added automatic `reportableError: true` field injection for all `*Report` function calls (ErrorReport, WarnReport, InfoReport, DebugReport)
+- Field is injected at the log/log.go entry point level for guaranteed universal adoption
+- Extensible via `reportFields` variable for future field additions
+- Added `providers/reportable` package as reusable provider pattern for future complex field injection needs
+
+## 1.7.0
+- Version bump (no documented changes)
+
 ## 1.6.2 (2019-04-01)
 - Using newer Logrus and Merry versions which include some bug fixes
 
