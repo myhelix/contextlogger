@@ -1,3 +1,6 @@
+## 1.9.0 (2026-07-23)
+- Add `providers/datadog_errors`: injects Datadog Error Tracking fields (`error.kind`, `error.message`, `error.stack`) on reported errors (ErrorReport/WarnReport). Companion to the `reportable` provider (PR #34). See DSI-1454.
+
 ## 1.8.0 (2026-02-16)
 Features:
 - Added automatic `reportableError: true` field injection for all `*Report` function calls (ErrorReport, WarnReport, InfoReport, DebugReport)
