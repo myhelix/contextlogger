@@ -1,5 +1,15 @@
-## 1.7.0 (2026-07-15)
+## 1.9.0 (2026-07-23)
 - Add `providers/datadog_errors`: injects Datadog Error Tracking fields (`error.kind`, `error.message`, `error.stack`) on reported errors (ErrorReport/WarnReport). Companion to the `reportable` provider (PR #34). See DSI-1454.
+
+## 1.8.0 (2026-02-16)
+Features:
+- Added automatic `reportableError: true` field injection for all `*Report` function calls (ErrorReport, WarnReport, InfoReport, DebugReport)
+- Field is injected at the log/log.go entry point level for guaranteed universal adoption
+- Extensible via `reportFields` variable for future field additions
+- Added `providers/reportable` package as reusable provider pattern for future complex field injection needs
+
+## 1.7.0
+- Version bump (no documented changes)
 
 ## 1.6.2 (2019-04-01)
 - Using newer Logrus and Merry versions which include some bug fixes
