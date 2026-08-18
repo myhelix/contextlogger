@@ -1,4 +1,4 @@
-## 2.0.0 (2026-08-18)
+## 1.10.0 (2026-08-18)
 Breaking changes:
 - Removed `providers/rollbar`, including the exported `WithRequest` and `LogProvider` functions. Any code that directly imports `providers/rollbar` (e.g. hss's `controller.go`, serverless's `logging/logging.go`) must be updated to use another provider (e.g. `providers/reportable` + `providers/datadog_errors`). See DSI-1575.
 - Dropped the `myhelix/rollbar` dependency.
