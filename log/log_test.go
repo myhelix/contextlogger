@@ -34,7 +34,7 @@ var _ = Describe("ReportableError Field Injection", func() {
 		ctx = context.Background()
 	})
 
-	Describe("Positive Tests (Report methods SHOULD have the field)", func() {
+	Describe("Positive Tests (Error/Warn Report methods SHOULD have the field)", func() {
 		It("TestErrorReport_InjectsReportableErrorField", func() {
 			log.FromContext(ctx).ErrorReport("test error")
 			calls := capturer.LogCalls(providers.Error)
@@ -46,22 +46,6 @@ var _ = Describe("ReportableError Field Injection", func() {
 		It("TestWarnReport_InjectsReportableErrorField", func() {
 			log.FromContext(ctx).WarnReport("test warn")
 			calls := capturer.LogCalls(providers.Warn)
-			Expect(calls).To(HaveLen(1))
-			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
-			Expect(calls[0].Report).To(BeTrue())
-		})
-
-		It("TestInfoReport_InjectsReportableErrorField", func() {
-			log.FromContext(ctx).InfoReport("test info")
-			calls := capturer.LogCalls(providers.Info)
-			Expect(calls).To(HaveLen(1))
-			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
-			Expect(calls[0].Report).To(BeTrue())
-		})
-
-		It("TestDebugReport_InjectsReportableErrorField", func() {
-			log.FromContext(ctx).DebugReport("test debug")
-			calls := capturer.LogCalls(providers.Debug)
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
 			Expect(calls[0].Report).To(BeTrue())
@@ -82,25 +66,9 @@ var _ = Describe("ReportableError Field Injection", func() {
 			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
 			Expect(calls[0].Report).To(BeTrue())
 		})
-
-		It("TestPackageLevelInfoReport_InjectsReportableErrorField", func() {
-			log.InfoReport("test info")
-			calls := capturer.LogCalls(providers.Info)
-			Expect(calls).To(HaveLen(1))
-			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
-			Expect(calls[0].Report).To(BeTrue())
-		})
-
-		It("TestPackageLevelDebugReport_InjectsReportableErrorField", func() {
-			log.DebugReport("test debug")
-			calls := capturer.LogCalls(providers.Debug)
-			Expect(calls).To(HaveLen(1))
-			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
-			Expect(calls[0].Report).To(BeTrue())
-		})
 	})
 
-	Describe("Negative Tests (Non-report methods should NOT have the field)", func() {
+	Describe("Negative Tests (Info/Debug Report methods and non-report methods should NOT have the field)", func() {
 		It("TestError_DoesNotInjectReportableErrorField", func() {
 			log.FromContext(ctx).Error("test error")
 			calls := capturer.LogCalls(providers.Error)
@@ -131,6 +99,48 @@ var _ = Describe("ReportableError Field Injection", func() {
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
 			Expect(calls[0].Report).To(BeFalse())
+		})
+
+		// InfoReport/DebugReport are *Report methods (report=true is passed
+		// through to the provider), but reportableError must NOT be injected
+		// into context for them — only Error/Warn reports are reportable.
+		// This exercises the real log.go entry point (contextLogger method
+		// form), not an inline-built provider chain, so it actually catches
+		// the class of bug where log.go injects the field before any
+		// provider runs.
+		It("TestInfoReport_DoesNotInjectReportableErrorField", func() {
+			log.FromContext(ctx).InfoReport("test info")
+			calls := capturer.LogCalls(providers.Info)
+			Expect(calls).To(HaveLen(1))
+			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
+			Expect(calls[0].Report).To(BeTrue())
+		})
+
+		It("TestDebugReport_DoesNotInjectReportableErrorField", func() {
+			log.FromContext(ctx).DebugReport("test debug")
+			calls := capturer.LogCalls(providers.Debug)
+			Expect(calls).To(HaveLen(1))
+			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
+			Expect(calls[0].Report).To(BeTrue())
+		})
+
+		// Package-level form: exercises log.go's InfoReport()/DebugReport()
+		// free functions, which delegate to BackgroundContext(), the other
+		// real entry point named in plan-amendment-02.md.
+		It("TestPackageLevelInfoReport_DoesNotInjectReportableErrorField", func() {
+			log.InfoReport("test info")
+			calls := capturer.LogCalls(providers.Info)
+			Expect(calls).To(HaveLen(1))
+			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
+			Expect(calls[0].Report).To(BeTrue())
+		})
+
+		It("TestPackageLevelDebugReport_DoesNotInjectReportableErrorField", func() {
+			log.DebugReport("test debug")
+			calls := capturer.LogCalls(providers.Debug)
+			Expect(calls).To(HaveLen(1))
+			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
+			Expect(calls[0].Report).To(BeTrue())
 		})
 	})
 
