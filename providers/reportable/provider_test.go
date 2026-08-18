@@ -41,7 +41,11 @@ func TestReportFalseDoesNotInjectField(t *testing.T) {
 	Expect(calls[0].ContextFields).NotTo(HaveKey(FieldName))
 }
 
-func TestAllLogLevelsWorkWithReportTrue(t *testing.T) {
+// Error/Warn are the reportable levels: report=true tags both. Info/Debug are
+// covered separately (TestInfoReportDoesNotInjectField,
+// TestDebugReportDoesNotInjectField) since report=true is deliberately a
+// no-op for them.
+func TestErrorAndWarnLevelsWorkWithReportTrue(t *testing.T) {
 	RegisterTestingT(t)
 
 	capturer := structured.LogProvider(nil)
@@ -50,8 +54,6 @@ func TestAllLogLevelsWorkWithReportTrue(t *testing.T) {
 
 	testProvider.Error(ctx, true, "error msg")
 	testProvider.Warn(ctx, true, "warn msg")
-	testProvider.Info(ctx, true, "info msg")
-	testProvider.Debug(ctx, true, "debug msg")
 
 	errorCalls := capturer.LogCalls(providers.Error)
 	Expect(errorCalls).To(HaveLen(1))
@@ -60,14 +62,6 @@ func TestAllLogLevelsWorkWithReportTrue(t *testing.T) {
 	warnCalls := capturer.LogCalls(providers.Warn)
 	Expect(warnCalls).To(HaveLen(1))
 	Expect(warnCalls[0].ContextFields).To(HaveKeyWithValue(FieldName, true))
-
-	infoCalls := capturer.LogCalls(providers.Info)
-	Expect(infoCalls).To(HaveLen(1))
-	Expect(infoCalls[0].ContextFields).To(HaveKeyWithValue(FieldName, true))
-
-	debugCalls := capturer.LogCalls(providers.Debug)
-	Expect(debugCalls).To(HaveLen(1))
-	Expect(debugCalls[0].ContextFields).To(HaveKeyWithValue(FieldName, true))
 }
 
 func TestPreservesExistingFields(t *testing.T) {
@@ -107,4 +101,35 @@ func TestFieldNameConstantIsExported(t *testing.T) {
 	RegisterTestingT(t)
 
 	Expect(FieldName).To(Equal("reportableError"))
+}
+
+// Info/Debug must NOT inject reportableError, even on report=true
+// (InfoReport/DebugReport) — mirrors datadog_errors' Info/Debug exemption so
+// the two sibling providers stay consistent about what "reported" means.
+func TestInfoReportDoesNotInjectField(t *testing.T) {
+	RegisterTestingT(t)
+
+	capturer := structured.LogProvider(nil)
+	testProvider := LogProvider(capturer)
+	ctx := context.Background()
+
+	testProvider.Info(ctx, true, "info msg")
+
+	calls := capturer.LogCalls(providers.Info)
+	Expect(calls).To(HaveLen(1))
+	Expect(calls[0].ContextFields).NotTo(HaveKey(FieldName))
+}
+
+func TestDebugReportDoesNotInjectField(t *testing.T) {
+	RegisterTestingT(t)
+
+	capturer := structured.LogProvider(nil)
+	testProvider := LogProvider(capturer)
+	ctx := context.Background()
+
+	testProvider.Debug(ctx, true, "debug msg")
+
+	calls := capturer.LogCalls(providers.Debug)
+	Expect(calls).To(HaveLen(1))
+	Expect(calls[0].ContextFields).NotTo(HaveKey(FieldName))
 }
