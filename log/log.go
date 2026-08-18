@@ -104,14 +104,21 @@ func (c contextLogger) WarnReport(args ...interface{}) {
 func (c contextLogger) Warn(args ...interface{}) {
 	c.provider.Warn(c.Context, false, args...)
 }
+// InfoReport does not inject reportFields into context: only Error/Warn
+// reports are treated as reportable. report=true is still passed through to
+// the provider so providers can distinguish *Report calls if they choose to.
 func (c contextLogger) InfoReport(args ...interface{}) {
-	c.provider.Info(contextWithReportFields(c.Context), true, args...)
+	c.provider.Info(c.Context, true, args...)
 }
 func (c contextLogger) Info(args ...interface{}) {
 	c.provider.Info(c.Context, false, args...)
 }
+
+// DebugReport does not inject reportFields into context: only Error/Warn
+// reports are treated as reportable. report=true is still passed through to
+// the provider so providers can distinguish *Report calls if they choose to.
 func (c contextLogger) DebugReport(args ...interface{}) {
-	c.provider.Debug(contextWithReportFields(c.Context), true, args...)
+	c.provider.Debug(c.Context, true, args...)
 }
 func (c contextLogger) Debug(args ...interface{}) {
 	c.provider.Debug(c.Context, false, args...)

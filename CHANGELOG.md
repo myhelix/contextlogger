@@ -1,3 +1,11 @@
+## 1.10.0 (2026-08-18)
+Breaking changes:
+- Removed `providers/rollbar`, including the exported `WithRequest` and `LogProvider` functions. Any code that directly imports `providers/rollbar` (e.g. hss's `controller.go`, serverless's `logging/logging.go`) must be updated to use another provider (e.g. `providers/reportable` + `providers/datadog_errors`). See DSI-1575.
+- Dropped the `myhelix/rollbar` dependency.
+
+Fixes:
+- Exempt Info/Debug reports from `reportableError` tagging in the `reportable` provider, so only Warn/Error reports are marked reportable. See DSI-1575.
+
 ## 1.9.0 (2026-07-23)
 - Add `providers/datadog_errors`: injects Datadog Error Tracking fields (`error.kind`, `error.message`, `error.stack`) on reported errors (ErrorReport/WarnReport). Companion to the `reportable` provider (PR #34). See DSI-1454.
 

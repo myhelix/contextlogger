@@ -42,7 +42,7 @@ func (p provider) extractContext(ctx context.Context, args []interface{}, includ
 			// Call merry.Wrap to generate trace for non-merry errors; that trace will be to
 			// here, not to where the error was generated, but better than nothing.
 			wrapped := merry.Wrap(err)
-			// Put stack into context, for providers that might need it (e.g. Rollbar)
+			// Put stack into context, for providers that might need it
 			ctx = log.ContextWithStack(ctx, merry.Stack(wrapped))
 			if includeTrace {
 				// Use tilde to sort stacktrace last, which at least for logrus is more readable

@@ -10,9 +10,10 @@ You can see the slides from Chris Williams' presentation to GoSF in April 2017, 
 The following packages are provided:
 
 - **logrus**: Log output using the [Logrus](https://github.com/sirupsen/logrus) logger
-- **rollbar**: Error reporting via [Rollbar](https://rollbar.com)
 - **newrelic**: Performance and custom metrics via [NewRelic](https://newrelic.com)
 - **merry**: Log structured error data and tracebacks to where an error was actually generated, using [Merry](https://github.com/ansel1/merry) errors
+- **datadog_errors**: Injects `error.kind`/`error.message`/`error.stack` from the reported error, the attributes Datadog Error Tracking needs to create and group an issue from a log event
+- **reportable**: Tags reported log events with `reportableError: true`, for filtering/monitoring the reported subset
 - **reported_at**: Include the file and line number responsible for each log message
 
 Log providers are chained together in whatever combination you desire. New log providers can be easily implemented by following the simple LogProvider interface.
@@ -78,17 +79,17 @@ Here's an example config which chains together all the built-in providers (excep
 
 import (
 	"github.com/myhelix/contextlogger/log"
+	cl_datadog_errors "github.com/myhelix/contextlogger/providers/datadog_errors"
 	cl_logrus "github.com/myhelix/contextlogger/providers/logrus"
 	cl_merry "github.com/myhelix/contextlogger/providers/merry"
 	cl_newrelic "github.com/myhelix/contextlogger/providers/newrelic"
+	"github.com/myhelix/contextlogger/providers/reportable"
 	"github.com/myhelix/contextlogger/providers/reported_at"
-	cl_rollbar "github.com/myhelix/contextlogger/providers/rollbar"
-	"github.com/myhelix/rollbar"
 )
 
 func configureLogging() error {
 	// Keep track for reporting at the end
-	var rollbarEnabled, newRelicEnabled bool
+	var newRelicEnabled bool
 
 	if config.LogLevel == "" {
 		config.LogLevel = "info"
@@ -102,28 +103,6 @@ func configureLogging() error {
 	})
 	if err != nil {
 		return err
-	}
-
-	// Rollbar error reporting
-	if config.RollbarToken != "" {
-		codeRevBytes, err := exec.Command("git", "rev-parse", "HEAD").Output()
-		if err != nil {
-			return err
-		}
-		codeRev := strings.Trim(string(codeRevBytes), " \n")
-
-		rollbar.Token = config.RollbarToken
-		rollbar.Environment = config.Env
-		rollbar.CodeVersion = codeRev  // Git hash/branch/tag (required for GitHub integration)
-		rollbar.ServerRoot = config.Package // path of project (required for GitHub integration and non-project stacktrace collapsing)
-		rollbar.FilterFields = regexp.MustCompile("(?i)password|secret|token|auth")
-
-		// Rollbar config is all at package level, so no config to pass in here
-		logProvider, err = cl_rollbar.LogProvider(logProvider)
-		if err != nil {
-			return err
-		}
-		rollbarEnabled = true
 	}
 
 	// NewRelicApp is a newrelic.Application
@@ -141,6 +120,14 @@ func configureLogging() error {
 		return err
 	}
 
+	// Injects error.kind/error.message/error.stack (Datadog Error Tracking's
+	// required attributes) on ErrorReport/WarnReport calls
+	logProvider = cl_datadog_errors.LogProvider(logProvider)
+
+	// Tags ErrorReport/WarnReport calls with reportableError: true, for
+	// filtering/monitoring the reported subset
+	logProvider = reportable.LogProvider(logProvider)
+
 	// Note the file and line number where each log message was reported from
 	logProvider, err = reported_at.LogProvider(logProvider, reported_at.RecommendedConfig)
 	if err != nil {
@@ -151,7 +138,6 @@ func configureLogging() error {
 
 	log.WithFields(log.Fields{
 		"level":           config.LogLevel,
-		"rollbarEnabled":  rollbarEnabled,
 		"newRelicEnabled": newRelicEnabled,
 	}).Info("Configured logging")
 

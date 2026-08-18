@@ -38,10 +38,15 @@ func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
 	p.LogProvider.Warn(p.injectIfReport(ctx, report), report, args...)
 }
 
+// Info and Debug deliberately do NOT inject reportableError, even on
+// report=true (InfoReport/DebugReport). This provider's contract is
+// ErrorReport/WarnReport only, matching the datadog_errors provider's
+// Info/Debug exemption so the two sibling providers agree on what counts as
+// "reported" and don't tag sub-error logs as reportable.
 func (p provider) Info(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Info(p.injectIfReport(ctx, report), report, args...)
+	p.LogProvider.Info(ctx, report, args...)
 }
 
 func (p provider) Debug(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Debug(p.injectIfReport(ctx, report), report, args...)
+	p.LogProvider.Debug(ctx, report, args...)
 }
