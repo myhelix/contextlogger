@@ -161,9 +161,8 @@ func FieldsFromContext(ctx context.Context) Fields {
 	return make(Fields)
 }
 
-// detachedContext is returned by Detach; it never reads from the context it
-// was built from again, but still forwards that context's cancellation signal
-// and deadline, captured once at construction time.
+// detachedContext holds a snapshot of what Detach needs, captured once so it
+// never has to read from the original context again.
 type detachedContext struct {
 	done     <-chan struct{}
 	deadline time.Time
@@ -192,23 +191,12 @@ func (d *detachedContext) Value(key interface{}) interface{} {
 	return nil
 }
 
-/*
-Detach captures the log fields, log provider, and cancellation/deadline state
-from ctx once, synchronously, and returns an equivalent context that will
-never read from ctx again.
-
-Use this before handing a context to a goroutine or outbound call that must
-outlive the current request. A context.WithValue-based child of ctx (which is
-what WithFields and DeriveBackgroundJob build today) still delegates Value()
-lookups back to ctx itself, which is unsafe if ctx wraps something reused
-across requests, like a pooled *gin.Context — a goroutine reading through that
-chain can race with whatever recycles the underlying object for an unrelated
-request. Detach breaks that chain while still forwarding real cancellation:
-ctx.Done()'s channel and ctx.Deadline()'s value are plain data once obtained,
-so capturing them synchronously here is exactly as safe as the existing
-FieldsFromContext extraction above, and reading from them later never touches
-ctx again.
-*/
+// Detach returns a context equivalent to ctx that never reads from ctx again.
+// Use it before handing a context to a goroutine or outbound call that must
+// outlive the current request — unlike WithFields/DeriveBackgroundJob, this
+// doesn't just layer a value on top of ctx, since Value() on that kind of
+// child still delegates back to ctx, which is unsafe if ctx wraps something
+// reused across requests (e.g. a pooled *gin.Context).
 func Detach(ctx context.Context) context.Context {
 	deadline, hasDL := ctx.Deadline()
 	provider, _ := ctx.Value(contextLogProviderKey{}).(providers.LogProvider)
