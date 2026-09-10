@@ -13,7 +13,6 @@ import (
 
 	"context"
 	"os"
-	"time"
 )
 
 type Metrics map[string]interface{}
@@ -161,26 +160,16 @@ func FieldsFromContext(ctx context.Context) Fields {
 	return make(Fields)
 }
 
-// detachedContext holds a snapshot of what Detach needs, captured once so it
-// never has to read from the original context again.
+// detachedContext embeds an internally-owned context for Deadline/Done/Err
+// (so those retain correct stdlib semantics, e.g. DeadlineExceeded vs
+// Canceled) and overrides only Value, which never reads from the context
+// Detach was built from.
 type detachedContext struct {
-	done     <-chan struct{}
-	deadline time.Time
-	hasDL    bool
+	context.Context
 	fields   Fields
 	provider providers.LogProvider
 }
 
-func (d *detachedContext) Deadline() (time.Time, bool) { return d.deadline, d.hasDL }
-func (d *detachedContext) Done() <-chan struct{}        { return d.done }
-func (d *detachedContext) Err() error {
-	select {
-	case <-d.done:
-		return context.Canceled
-	default:
-		return nil
-	}
-}
 func (d *detachedContext) Value(key interface{}) interface{} {
 	switch key {
 	case contextLogFieldsKey{}:
@@ -198,12 +187,27 @@ func (d *detachedContext) Value(key interface{}) interface{} {
 // child still delegates back to ctx, which is unsafe if ctx wraps something
 // reused across requests (e.g. a pooled *gin.Context).
 func Detach(ctx context.Context) context.Context {
-	deadline, hasDL := ctx.Deadline()
+	var derived context.Context
+	var cancel context.CancelFunc
+	if deadline, hasDL := ctx.Deadline(); hasDL {
+		derived, cancel = context.WithDeadline(context.Background(), deadline)
+	} else {
+		derived, cancel = context.WithCancel(context.Background())
+	}
+
+	if done := ctx.Done(); done != nil {
+		go func() {
+			select {
+			case <-done:
+				cancel()
+			case <-derived.Done():
+			}
+		}()
+	}
+
 	provider, _ := ctx.Value(contextLogProviderKey{}).(providers.LogProvider)
 	return &detachedContext{
-		done:     ctx.Done(),
-		deadline: deadline,
-		hasDL:    hasDL,
+		Context:  derived,
 		fields:   FieldsFromContext(ctx),
 		provider: provider,
 	}

@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"context"
+	"time"
 
 	"github.com/myhelix/contextlogger/log"
 	"github.com/myhelix/contextlogger/providers/dummy"
@@ -64,6 +65,16 @@ var _ = Describe("Detach", func() {
 
 		Expect(gotOK).To(Equal(wantOK))
 		Expect(gotTime).To(Equal(wantTime))
+	})
+
+	It("TestDetach_DeadlineExceededReturnsCorrectError", func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+		defer cancel()
+
+		detached := log.Detach(ctx)
+
+		Eventually(detached.Done()).Should(BeClosed())
+		Expect(detached.Err()).To(MatchError(context.DeadlineExceeded))
 	})
 
 	It("TestDetach_NeverReadsFromOriginalContextAfterConstruction", func() {
