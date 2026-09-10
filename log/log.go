@@ -13,6 +13,7 @@ import (
 
 	"context"
 	"os"
+	"time"
 )
 
 type Metrics map[string]interface{}
@@ -158,6 +159,67 @@ func FieldsFromContext(ctx context.Context) Fields {
 		return fields
 	}
 	return make(Fields)
+}
+
+// detachedContext embeds an internally-owned context for Deadline/Done/Err
+// (so those retain correct stdlib semantics, e.g. DeadlineExceeded vs
+// Canceled) and overrides only Value, which never reads from the context
+// Detach was built from.
+type detachedContext struct {
+	context.Context
+	fields   Fields
+	provider providers.LogProvider
+}
+
+func (d *detachedContext) Value(key interface{}) interface{} {
+	switch key {
+	case contextLogFieldsKey{}:
+		return d.fields
+	case contextLogProviderKey{}:
+		return d.provider
+	}
+	return nil
+}
+
+// Detach returns a context equivalent to ctx that never reads from ctx again.
+// Use it before handing a context to a goroutine or outbound call that must
+// outlive the current request — unlike WithFields/DeriveBackgroundJob, this
+// doesn't just layer a value on top of ctx, since Value() on that kind of
+// child still delegates back to ctx, which is unsafe if ctx wraps something
+// reused across requests (e.g. a pooled *gin.Context).
+func Detach(ctx context.Context) context.Context {
+	var derived context.Context
+	var cancel context.CancelFunc
+	deadline, hasDL := ctx.Deadline()
+	if hasDL {
+		derived, cancel = context.WithDeadline(context.Background(), deadline)
+	} else {
+		derived, cancel = context.WithCancel(context.Background())
+	}
+
+	// derived already has the same deadline as ctx, so its own timer will
+	// fire DeadlineExceeded on its own. Only forward ctx's Done() as an
+	// explicit cancel when it closes before that deadline — otherwise this
+	// goroutine could race derived's timer and overwrite a correct
+	// DeadlineExceeded with Canceled.
+	if done := ctx.Done(); done != nil {
+		go func() {
+			select {
+			case <-done:
+				if !hasDL || time.Now().Before(deadline) {
+					cancel()
+				}
+			case <-derived.Done():
+			}
+		}()
+	}
+
+	provider, _ := ctx.Value(contextLogProviderKey{}).(providers.LogProvider)
+	return &detachedContext{
+		Context:  derived,
+		fields:   FieldsFromContext(ctx),
+		provider: provider,
+	}
 }
 
 func contextWithReportFields(ctx context.Context) context.Context {

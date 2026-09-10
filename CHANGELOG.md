@@ -1,3 +1,7 @@
+## 1.10.1 (2026-09-10)
+Fixes:
+- Add `log.Detach`, to safely hand a context to a goroutine or outbound call that must outlive the current request without risking a race on a context that wraps something reused across requests, like a pooled `*gin.Context`. See LABS-1170.
+
 ## 1.10.0 (2026-08-18)
 Breaking changes:
 - Removed `providers/rollbar`, including the exported `WithRequest` and `LogProvider` functions. Any code that directly imports `providers/rollbar` (e.g. hss's `controller.go`, serverless's `logging/logging.go`) must be updated to use another provider (e.g. `providers/reportable` + `providers/datadog_errors`). See DSI-1575.
