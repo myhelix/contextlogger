@@ -13,6 +13,7 @@ import (
 
 	"context"
 	"os"
+	"time"
 )
 
 type Metrics map[string]interface{}
@@ -189,17 +190,25 @@ func (d *detachedContext) Value(key interface{}) interface{} {
 func Detach(ctx context.Context) context.Context {
 	var derived context.Context
 	var cancel context.CancelFunc
-	if deadline, hasDL := ctx.Deadline(); hasDL {
+	deadline, hasDL := ctx.Deadline()
+	if hasDL {
 		derived, cancel = context.WithDeadline(context.Background(), deadline)
 	} else {
 		derived, cancel = context.WithCancel(context.Background())
 	}
 
+	// derived already has the same deadline as ctx, so its own timer will
+	// fire DeadlineExceeded on its own. Only forward ctx's Done() as an
+	// explicit cancel when it closes before that deadline — otherwise this
+	// goroutine could race derived's timer and overwrite a correct
+	// DeadlineExceeded with Canceled.
 	if done := ctx.Done(); done != nil {
 		go func() {
 			select {
 			case <-done:
-				cancel()
+				if !hasDL || time.Now().Before(deadline) {
+					cancel()
+				}
 			case <-derived.Done():
 			}
 		}()
