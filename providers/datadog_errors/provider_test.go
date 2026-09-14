@@ -84,12 +84,20 @@ func TestNonErrorArgIgnored(t *testing.T) {
 	Expect(output.String()).NotTo(ContainSubstring("error.kind"))
 }
 
-// Warn reports are also enriched.
-func TestWarnReportInjects(t *testing.T) {
+func TestWarnReportInjectsAndUsesErrorSeverity(t *testing.T) {
 	setup(t)
 
 	testProvider.Warn(context.Background(), true, errors.New("warn broke"))
-	Expect(output.String()).To(MatchRegexp(`error\.message="warn broke"`))
+	out := output.String()
+	Expect(out).To(MatchRegexp(`level=error`))
+	Expect(out).To(MatchRegexp(`error\.message="warn broke"`))
+}
+
+func TestNonReportWarnUsesWarningSeverity(t *testing.T) {
+	setup(t)
+
+	testProvider.Warn(context.Background(), false, errors.New("warn broke"))
+	Expect(output.String()).To(MatchRegexp(`level=warning`))
 }
 
 // An error passed alongside extra args (the common ErrorReport(err, "context")

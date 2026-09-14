@@ -109,7 +109,12 @@ func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Warn(p.injectIfReport(ctx, report, args), report, args...)
+	ctx = p.injectIfReport(ctx, report, args)
+	if report {
+		p.LogProvider.Error(ctx, report, args...)
+		return
+	}
+	p.LogProvider.Warn(ctx, report, args...)
 }
 
 // Info and Debug deliberately do NOT inject error.* fields, even on report=true
