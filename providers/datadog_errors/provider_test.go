@@ -38,7 +38,6 @@ func setupWithOptions(t *testing.T, options Options) {
 	testProvider = LogProviderWithOptions(outputProvider, options)
 }
 
-// A report of an error should get error.kind / error.message / error.stack.
 func TestReportInjectsErrorFields(t *testing.T) {
 	setup(t)
 
@@ -49,8 +48,6 @@ func TestReportInjectsErrorFields(t *testing.T) {
 	Expect(out).To(MatchRegexp(`error\.stack=`))
 }
 
-// A non-report (report=false) must NOT get any error.* fields, so ordinary
-// Error() calls don't become Datadog Error Tracking issues.
 func TestNonReportDoesNotInject(t *testing.T) {
 	setup(t)
 
@@ -61,16 +58,13 @@ func TestNonReportDoesNotInject(t *testing.T) {
 	Expect(out).NotTo(ContainSubstring("error.stack"))
 }
 
-// error.kind should reflect the Go type of the error value.
 func TestErrorKindFromType(t *testing.T) {
 	setup(t)
 
 	testProvider.Error(context.Background(), true, errors.New("boom"))
-	// stdlib errors.New yields *errors.errorString
 	Expect(output.String()).To(MatchRegexp(`error\.kind=errors\.errorString`))
 }
 
-// Merry errors are supported (message + stack extracted).
 func TestMerryError(t *testing.T) {
 	setup(t)
 
@@ -80,7 +74,6 @@ func TestMerryError(t *testing.T) {
 	Expect(out).To(MatchRegexp(`error\.stack=`))
 }
 
-// Non-error args are ignored (no error.* fields, no panic).
 func TestNonErrorArgIgnored(t *testing.T) {
 	setup(t)
 
@@ -122,8 +115,6 @@ func TestNonReportWarnUsesWarningSeverity(t *testing.T) {
 	Expect(output.String()).To(MatchRegexp(`level=warning`))
 }
 
-// An error passed alongside extra args (the common ErrorReport(err, "context")
-// shape) must still be enriched — we scan all args, not just a lone one.
 func TestReportInjectsWithExtraArgs(t *testing.T) {
 	setup(t)
 
@@ -134,9 +125,7 @@ func TestReportInjectsWithExtraArgs(t *testing.T) {
 	Expect(out).To(MatchRegexp(`error\.stack=`))
 }
 
-// A typed-nil error (nil pointer stored in an error interface) satisfies the
-// error type assertion but would panic on err.Error(); it must be treated as
-// absent, not crash the report path.
+// A typed-nil error must be ignored instead of panicking on Error().
 type typedNilErr struct{}
 
 func (*typedNilErr) Error() string { return "should never be called" }
@@ -144,14 +133,13 @@ func (*typedNilErr) Error() string { return "should never be called" }
 func TestTypedNilErrorDoesNotPanic(t *testing.T) {
 	setup(t)
 
-	var e *typedNilErr // nil pointer, non-nil error interface
+	var e *typedNilErr
 	Expect(func() {
 		testProvider.Error(context.Background(), true, error(e))
 	}).NotTo(Panic())
 	Expect(output.String()).NotTo(ContainSubstring("error.kind"))
 }
 
-// When several args are errors, the first non-nil error wins.
 func TestFirstNonNilErrorWins(t *testing.T) {
 	setup(t)
 
@@ -159,8 +147,6 @@ func TestFirstNonNilErrorWins(t *testing.T) {
 	Expect(output.String()).To(MatchRegexp(`error\.message="the real error"`))
 }
 
-// Info/Debug must NOT inject error.* fields even on report=true — this
-// provider's contract is ErrorReport/WarnReport only.
 func TestInfoReportDoesNotInject(t *testing.T) {
 	setup(t)
 

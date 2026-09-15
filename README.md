@@ -121,12 +121,9 @@ func configureLogging() error {
 		return err
 	}
 
-	// Injects error.kind/error.message/error.stack (Datadog Error Tracking's
-	// required attributes) on ErrorReport/WarnReport calls. This default keeps
-	// WarnReport at warning severity for backward compatibility.
+	// Add Datadog fields to reported errors; WarnReport remains a warning.
 	logProvider = cl_datadog_errors.LogProvider(logProvider)
-	// Applications that deliberately want reported warnings containing an
-	// actual error to be eligible for Error Tracking may instead use:
+	// To make WarnReport errors eligible for Error Tracking, use:
 	// logProvider = cl_datadog_errors.LogProviderWithOptions(logProvider,
 	//     cl_datadog_errors.Options{PromoteReportedWarnings: true})
 
