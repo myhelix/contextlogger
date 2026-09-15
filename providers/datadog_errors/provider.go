@@ -12,7 +12,9 @@ Datadog Error Tracking ingests an error only when the log carries:
 This provider derives those from the first error argument and adds them to the
 log context, but ONLY when the call is a report (ErrorReport / WarnReport, i.e.
 report == true). Non-reported logs are left untouched so that ordinary Error()
-calls do not become Error Tracking issues.
+calls do not become Error Tracking issues. Reported warnings retain warning
+severity by default; callers may opt in to promoting reported warnings that
+contain an actual error to error severity.
 
 Pairs with the `reportable` provider (PR #34), which adds the `reportableError`
 tag used to filter/monitor the reported subset. Wire both into the chain.
@@ -39,10 +41,31 @@ const (
 
 type provider struct {
 	providers.LogProvider
+	options Options
 }
 
+// Options controls behavior that is not safe to enable for every existing
+// consumer of this provider.
+type Options struct {
+	// PromoteReportedWarnings emits WarnReport calls at error severity, but only
+	// when the arguments contain an actual error. This makes those events
+	// eligible for Datadog Error Tracking without turning string-only warnings
+	// into errors.
+	PromoteReportedWarnings bool
+}
+
+// LogProvider preserves the historical severity of WarnReport calls.
 func LogProvider(nextProvider providers.LogProvider) providers.LogProvider {
-	return provider{chaining.LogProvider(nextProvider)}
+	return LogProviderWithOptions(nextProvider, Options{})
+}
+
+// LogProviderWithOptions constructs a provider with explicit behavior for
+// reported warnings.
+func LogProviderWithOptions(nextProvider providers.LogProvider, options Options) providers.LogProvider {
+	return provider{
+		LogProvider: chaining.LogProvider(nextProvider),
+		options:     options,
+	}
 }
 
 // errorKind returns the Go type name of err for use as error.kind (the Datadog
@@ -86,13 +109,13 @@ func firstError(args []interface{}) error {
 // injectIfReport adds Datadog error.* fields when this is a report and one of
 // the args is a non-nil error. It scans all args (not just the first) so that
 // calls like ErrorReport(err, "context", kv...) still enrich the event.
-func (p provider) injectIfReport(ctx context.Context, report bool, args []interface{}) context.Context {
+func (p provider) injectIfReport(ctx context.Context, report bool, args []interface{}) (context.Context, bool) {
 	if !report {
-		return ctx
+		return ctx, false
 	}
 	err := firstError(args)
 	if err == nil {
-		return ctx
+		return ctx, false
 	}
 	// merry.Wrap generates a stack for non-merry errors and preserves an
 	// existing one for merry errors.
@@ -101,16 +124,17 @@ func (p provider) injectIfReport(ctx context.Context, report bool, args []interf
 		FieldErrorKind:    errorKind(err),
 		FieldErrorMessage: err.Error(),
 		FieldErrorStack:   merry.Stacktrace(wrapped),
-	})
+	}), true
 }
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Error(p.injectIfReport(ctx, report, args), report, args...)
+	ctx, _ = p.injectIfReport(ctx, report, args)
+	p.LogProvider.Error(ctx, report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	ctx = p.injectIfReport(ctx, report, args)
-	if report {
+	ctx, hasError := p.injectIfReport(ctx, report, args)
+	if report && hasError && p.options.PromoteReportedWarnings {
 		p.LogProvider.Error(ctx, report, args...)
 		return
 	}

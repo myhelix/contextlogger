@@ -16,9 +16,14 @@ type provider struct {
 }
 
 func LogProvider(nextProvider providers.LogProvider, fields log.Fields) providers.LogProvider {
+	fixedFields := make(log.Fields, len(fields))
+	for key, value := range fields {
+		fixedFields[key] = value
+	}
+
 	return provider{
 		LogProvider: chaining.LogProvider(nextProvider),
-		fields:      fields,
+		fields:      fixedFields,
 	}
 }
 

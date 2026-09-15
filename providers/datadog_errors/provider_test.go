@@ -19,6 +19,10 @@ var output *bytes.Buffer
 var testProvider providers.LogProvider
 
 func setup(t *testing.T) {
+	setupWithOptions(t, Options{})
+}
+
+func setupWithOptions(t *testing.T, options Options) {
 	RegisterTestingT(t)
 
 	output = new(bytes.Buffer)
@@ -31,7 +35,7 @@ func setup(t *testing.T) {
 		},
 	})
 	Expect(err).To(BeNil())
-	testProvider = LogProvider(outputProvider)
+	testProvider = LogProviderWithOptions(outputProvider, options)
 }
 
 // A report of an error should get error.kind / error.message / error.stack.
@@ -84,13 +88,31 @@ func TestNonErrorArgIgnored(t *testing.T) {
 	Expect(output.String()).NotTo(ContainSubstring("error.kind"))
 }
 
-func TestWarnReportInjectsAndUsesErrorSeverity(t *testing.T) {
+func TestWarnReportInjectsAndPreservesWarningSeverityByDefault(t *testing.T) {
 	setup(t)
+
+	testProvider.Warn(context.Background(), true, errors.New("warn broke"))
+	out := output.String()
+	Expect(out).To(MatchRegexp(`level=warning`))
+	Expect(out).To(MatchRegexp(`error\.message="warn broke"`))
+}
+
+func TestWarnReportCanPromoteErrorSeverity(t *testing.T) {
+	setupWithOptions(t, Options{PromoteReportedWarnings: true})
 
 	testProvider.Warn(context.Background(), true, errors.New("warn broke"))
 	out := output.String()
 	Expect(out).To(MatchRegexp(`level=error`))
 	Expect(out).To(MatchRegexp(`error\.message="warn broke"`))
+}
+
+func TestStringOnlyWarnReportIsNotPromoted(t *testing.T) {
+	setupWithOptions(t, Options{PromoteReportedWarnings: true})
+
+	testProvider.Warn(context.Background(), true, "warning without an error")
+	out := output.String()
+	Expect(out).To(MatchRegexp(`level=warning`))
+	Expect(out).NotTo(ContainSubstring("error.kind"))
 }
 
 func TestNonReportWarnUsesWarningSeverity(t *testing.T) {
