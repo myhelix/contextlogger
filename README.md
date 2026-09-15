@@ -13,6 +13,7 @@ The following packages are provided:
 - **newrelic**: Performance and custom metrics via [NewRelic](https://newrelic.com)
 - **merry**: Log structured error data and tracebacks to where an error was actually generated, using [Merry](https://github.com/ansel1/merry) errors
 - **datadog_errors**: Injects `error.kind`/`error.message`/`error.stack` from the reported error, the attributes Datadog Error Tracking needs to create and group an issue from a log event
+- **fixed_fields**: Adds authoritative fields such as the emitting application/service to every log and metric event
 - **reportable**: Tags reported log events with `reportableError: true`, for filtering/monitoring the reported subset
 - **reported_at**: Include the file and line number responsible for each log message
 
@@ -120,9 +121,11 @@ func configureLogging() error {
 		return err
 	}
 
-	// Injects error.kind/error.message/error.stack (Datadog Error Tracking's
-	// required attributes) on ErrorReport/WarnReport calls
+	// Add Datadog fields to reported errors; WarnReport remains a warning.
 	logProvider = cl_datadog_errors.LogProvider(logProvider)
+	// To make WarnReport errors eligible for Error Tracking, use:
+	// logProvider = cl_datadog_errors.LogProviderWithOptions(logProvider,
+	//     cl_datadog_errors.Options{PromoteReportedWarnings: true})
 
 	// Tags ErrorReport/WarnReport calls with reportableError: true, for
 	// filtering/monitoring the reported subset
@@ -144,4 +147,3 @@ func configureLogging() error {
 	return nil
 }
 ```
-

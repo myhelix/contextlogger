@@ -1,26 +1,19 @@
 // © 2016-2026 Helix OpCo LLC. All rights reserved.
 
 /*
-Package datadog_errors injects the attributes that Datadog Error Tracking needs
-to create and group an error issue from a log event.
+Package datadog_errors adds Datadog Error Tracking fields to reported Error and
+Warn events. Error values retain their type and stack; string-only reports use
+a synthetic kind and message. Non-reported events are unchanged.
 
-Datadog Error Tracking ingests an error only when the log carries:
-  - error.kind    : the error type (used for grouping)
-  - error.message : the human-readable message
-  - error.stack   : the stack trace
-
-This provider derives those from the first error argument and adds them to the
-log context, but ONLY when the call is a report (ErrorReport / WarnReport, i.e.
-report == true). Non-reported logs are left untouched so that ordinary Error()
-calls do not become Error Tracking issues.
-
-Pairs with the `reportable` provider (PR #34), which adds the `reportableError`
-tag used to filter/monitor the reported subset. Wire both into the chain.
+WarnReport keeps warning severity by default. Set PromoteReportedWarnings to
+make reported warnings eligible for Datadog Error Tracking. Use with the
+reportable provider to retain their original reported level.
 */
 package datadog_errors
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/ansel1/merry"
@@ -32,27 +25,40 @@ import (
 
 // Datadog Error Tracking reserved attributes.
 const (
-	FieldErrorKind    = "error.kind"
-	FieldErrorMessage = "error.message"
-	FieldErrorStack   = "error.stack"
+	FieldErrorKind      = "error.kind"
+	FieldErrorMessage   = "error.message"
+	FieldErrorStack     = "error.stack"
+	KindReportedError   = "ReportedError"
+	KindReportedWarning = "ReportedWarning"
 )
 
 type provider struct {
 	providers.LogProvider
+	options Options
 }
 
+// Options configures Datadog error logging.
+type Options struct {
+	// PromoteReportedWarnings emits WarnReport calls at error severity.
+	PromoteReportedWarnings bool
+}
+
+// LogProvider preserves WarnReport severity.
 func LogProvider(nextProvider providers.LogProvider) providers.LogProvider {
-	return provider{chaining.LogProvider(nextProvider)}
+	return LogProviderWithOptions(nextProvider, Options{})
 }
 
-// errorKind returns the Go type name of err for use as error.kind (the Datadog
-// grouping key).
-//
-// NOTE: for merry-wrapped errors this reports merry's wrapper type (e.g.
-// merry.errImpl) rather than the underlying cause. Reporting the real
-// underlying type would improve grouping, but the merry version pinned by this
-// library does not expose a stable unwrap helper; revisit once merry is
-// upgraded. See DSI-1454.
+// LogProviderWithOptions configures reported warning behavior.
+func LogProviderWithOptions(nextProvider providers.LogProvider, options Options) providers.LogProvider {
+	return provider{
+		LogProvider: chaining.LogProvider(nextProvider),
+		options:     options,
+	}
+}
+
+// errorKind returns the Go type used by Datadog for grouping. Merry's current
+// version has no stable unwrap API, so wrapped errors group by wrapper type.
+// See DSI-1454.
 func errorKind(err error) string {
 	t := reflect.TypeOf(err)
 	if t == nil {
@@ -64,18 +70,11 @@ func errorKind(err error) string {
 	return t.String()
 }
 
-// firstError returns the first non-nil error among args, or nil if there is
-// none. It guards against typed-nil interfaces (e.g. a (*myErr)(nil) stored in
-// an error interface), which satisfy the error type assertion but panic on
-// err.Error(); such values are treated as absent.
+// firstError returns the first non-nil error and ignores typed-nil values.
 func firstError(args []interface{}) error {
 	for _, a := range args {
 		err, ok := a.(error)
-		if !ok || err == nil {
-			continue
-		}
-		// Catch typed-nil: a non-nil interface wrapping a nil pointer.
-		if v := reflect.ValueOf(err); v.Kind() == reflect.Ptr && v.IsNil() {
+		if !ok || isNilError(err) {
 			continue
 		}
 		return err
@@ -83,40 +82,66 @@ func firstError(args []interface{}) error {
 	return nil
 }
 
-// injectIfReport adds Datadog error.* fields when this is a report and one of
-// the args is a non-nil error. It scans all args (not just the first) so that
-// calls like ErrorReport(err, "context", kv...) still enrich the event.
-func (p provider) injectIfReport(ctx context.Context, report bool, args []interface{}) context.Context {
+func isNilError(err error) bool {
+	if err == nil {
+		return true
+	}
+	v := reflect.ValueOf(err)
+	return v.Kind() == reflect.Ptr && v.IsNil()
+}
+
+func reportMessage(args []interface{}) string {
+	filtered := make([]interface{}, 0, len(args))
+	for _, a := range args {
+		if err, ok := a.(error); ok && isNilError(err) {
+			continue
+		}
+		filtered = append(filtered, a)
+	}
+	return fmt.Sprint(filtered...)
+}
+
+// injectIfReport adds Datadog fields from the first error in a reported event,
+// or synthesizes the minimum grouping fields for a string-only report.
+func (p provider) injectIfReport(ctx context.Context, report bool, syntheticKind string, args []interface{}) (context.Context, bool) {
 	if !report {
-		return ctx
+		return ctx, false
 	}
 	err := firstError(args)
 	if err == nil {
-		return ctx
+		message := reportMessage(args)
+		if message == "" {
+			return ctx, false
+		}
+		return log.ContextWithFields(ctx, log.Fields{
+			FieldErrorKind:    syntheticKind,
+			FieldErrorMessage: message,
+		}), true
 	}
-	// merry.Wrap generates a stack for non-merry errors and preserves an
-	// existing one for merry errors.
+	// Add a stack to plain errors and preserve existing Merry stacks.
 	wrapped := merry.Wrap(err)
 	return log.ContextWithFields(ctx, log.Fields{
 		FieldErrorKind:    errorKind(err),
 		FieldErrorMessage: err.Error(),
 		FieldErrorStack:   merry.Stacktrace(wrapped),
-	})
+	}), true
 }
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Error(p.injectIfReport(ctx, report, args), report, args...)
+	ctx, _ = p.injectIfReport(ctx, report, KindReportedError, args)
+	p.LogProvider.Error(ctx, report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Warn(p.injectIfReport(ctx, report, args), report, args...)
+	ctx, hasErrorFields := p.injectIfReport(ctx, report, KindReportedWarning, args)
+	if report && hasErrorFields && p.options.PromoteReportedWarnings {
+		p.LogProvider.Error(ctx, report, args...)
+		return
+	}
+	p.LogProvider.Warn(ctx, report, args...)
 }
 
-// Info and Debug deliberately do NOT inject error.* fields, even on report=true
-// (InfoReport/DebugReport). This provider's contract is ErrorReport/WarnReport
-// only. In practice Datadog Error Tracking wouldn't ingest info/debug anyway
-// (its status gate is ERROR/CRITICAL/ALERT/EMERGENCY), but we skip injection so
-// the fields don't appear as noise on sub-error logs.
+// Info and Debug never add Error Tracking fields.
 func (p provider) Info(ctx context.Context, report bool, args ...interface{}) {
 	p.LogProvider.Info(ctx, report, args...)
 }

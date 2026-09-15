@@ -11,7 +11,12 @@ import (
 	"github.com/myhelix/contextlogger/providers/chaining"
 )
 
-const FieldName = "reportableError"
+const (
+	FieldName              = "reportableError"
+	ReportedLevelFieldName = "reportedLevel"
+	ReportedLevelError     = "error"
+	ReportedLevelWarning   = "warning"
+)
 
 type provider struct {
 	providers.LogProvider
@@ -21,21 +26,22 @@ func LogProvider(nextProvider providers.LogProvider) providers.LogProvider {
 	return provider{chaining.LogProvider(nextProvider)}
 }
 
-func (p provider) injectIfReport(ctx context.Context, report bool) context.Context {
+func (p provider) injectIfReport(ctx context.Context, report bool, reportedLevel string) context.Context {
 	if report {
 		return log.ContextWithFields(ctx, log.Fields{
-			FieldName: true,
+			FieldName:              true,
+			ReportedLevelFieldName: reportedLevel,
 		})
 	}
 	return ctx
 }
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Error(p.injectIfReport(ctx, report), report, args...)
+	p.LogProvider.Error(p.injectIfReport(ctx, report, ReportedLevelError), report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	p.LogProvider.Warn(p.injectIfReport(ctx, report), report, args...)
+	p.LogProvider.Warn(p.injectIfReport(ctx, report, ReportedLevelWarning), report, args...)
 }
 
 // Info and Debug deliberately do NOT inject reportableError, even on
