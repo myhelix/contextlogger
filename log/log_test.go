@@ -40,6 +40,7 @@ var _ = Describe("ReportableError Field Injection", func() {
 			calls := capturer.LogCalls(providers.Error)
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
+			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportedLevel", "error"))
 			Expect(calls[0].Report).To(BeTrue())
 		})
 
@@ -48,6 +49,7 @@ var _ = Describe("ReportableError Field Injection", func() {
 			calls := capturer.LogCalls(providers.Warn)
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportableError", true))
+			Expect(calls[0].ContextFields).To(HaveKeyWithValue("reportedLevel", "warning"))
 			Expect(calls[0].Report).To(BeTrue())
 		})
 
@@ -74,6 +76,7 @@ var _ = Describe("ReportableError Field Injection", func() {
 			calls := capturer.LogCalls(providers.Error)
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
+			Expect(calls[0].ContextFields).NotTo(HaveKey("reportedLevel"))
 			Expect(calls[0].Report).To(BeFalse())
 		})
 
@@ -82,6 +85,7 @@ var _ = Describe("ReportableError Field Injection", func() {
 			calls := capturer.LogCalls(providers.Warn)
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
+			Expect(calls[0].ContextFields).NotTo(HaveKey("reportedLevel"))
 			Expect(calls[0].Report).To(BeFalse())
 		})
 
@@ -113,6 +117,7 @@ var _ = Describe("ReportableError Field Injection", func() {
 			calls := capturer.LogCalls(providers.Info)
 			Expect(calls).To(HaveLen(1))
 			Expect(calls[0].ContextFields).NotTo(HaveKey("reportableError"))
+			Expect(calls[0].ContextFields).NotTo(HaveKey("reportedLevel"))
 			Expect(calls[0].Report).To(BeTrue())
 		})
 
@@ -201,6 +206,7 @@ var _ = Describe("ReportableError Field Injection", func() {
 			err := json.Unmarshal(buf.Bytes(), &output)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(output).To(HaveKeyWithValue("reportableError", true))
+			Expect(output).To(HaveKeyWithValue("reportedLevel", "error"))
 			Expect(output).To(HaveKeyWithValue("level", "error"))
 			Expect(output).To(HaveKeyWithValue("msg", "test error with logrus"))
 		})

@@ -34,7 +34,16 @@ func init() {
 	defaultProvider = dummy.LogProvider(os.Stderr)
 }
 
-var reportFields = Fields{"reportableError": true}
+var (
+	errorReportFields = Fields{
+		"reportableError": true,
+		"reportedLevel":   "error",
+	}
+	warnReportFields = Fields{
+		"reportableError": true,
+		"reportedLevel":   "warning",
+	}
+)
 
 /* Keys for Context Values */
 type contextLogProviderKey struct{}
@@ -94,18 +103,19 @@ func (c contextLogger) LogProvider() providers.LogProvider {
 	return c.provider
 }
 func (c contextLogger) ErrorReport(args ...interface{}) {
-	c.provider.Error(contextWithReportFields(c.Context), true, args...)
+	c.provider.Error(contextWithReportFields(c.Context, errorReportFields), true, args...)
 }
 func (c contextLogger) Error(args ...interface{}) {
 	c.provider.Error(c.Context, false, args...)
 }
 func (c contextLogger) WarnReport(args ...interface{}) {
-	c.provider.Warn(contextWithReportFields(c.Context), true, args...)
+	c.provider.Warn(contextWithReportFields(c.Context, warnReportFields), true, args...)
 }
 func (c contextLogger) Warn(args ...interface{}) {
 	c.provider.Warn(c.Context, false, args...)
 }
-// InfoReport does not inject reportFields into context: only Error/Warn
+
+// InfoReport does not inject report metadata into context: only Error/Warn
 // reports are treated as reportable. report=true is still passed through to
 // the provider so providers can distinguish *Report calls if they choose to.
 func (c contextLogger) InfoReport(args ...interface{}) {
@@ -222,8 +232,8 @@ func Detach(ctx context.Context) context.Context {
 	}
 }
 
-func contextWithReportFields(ctx context.Context) context.Context {
-	return ContextWithFields(ctx, reportFields)
+func contextWithReportFields(ctx context.Context, fields Fields) context.Context {
+	return ContextWithFields(ctx, fields)
 }
 
 func ContextWithStack(ctx context.Context, stack []uintptr) context.Context {

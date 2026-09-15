@@ -1,18 +1,19 @@
 // © 2016-2026 Helix OpCo LLC. All rights reserved.
 
 /*
-Package datadog_errors adds error.kind, error.message, and error.stack to
-reported Error and Warn events that contain an error. Non-reported events are
-unchanged.
+Package datadog_errors adds Datadog Error Tracking fields to reported Error and
+Warn events. Error values retain their type and stack; string-only reports use
+a synthetic kind and message. Non-reported events are unchanged.
 
 WarnReport keeps warning severity by default. Set PromoteReportedWarnings to
-make reported warnings containing an error eligible for Datadog Error Tracking.
-Use with the reportable provider to tag reported events.
+make reported warnings eligible for Datadog Error Tracking. Use with the
+reportable provider to retain their original reported level.
 */
 package datadog_errors
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/ansel1/merry"
@@ -24,9 +25,11 @@ import (
 
 // Datadog Error Tracking reserved attributes.
 const (
-	FieldErrorKind    = "error.kind"
-	FieldErrorMessage = "error.message"
-	FieldErrorStack   = "error.stack"
+	FieldErrorKind      = "error.kind"
+	FieldErrorMessage   = "error.message"
+	FieldErrorStack     = "error.stack"
+	KindReportedError   = "ReportedError"
+	KindReportedWarning = "ReportedWarning"
 )
 
 type provider struct {
@@ -36,7 +39,7 @@ type provider struct {
 
 // Options configures Datadog error logging.
 type Options struct {
-	// PromoteReportedWarnings emits WarnReport calls containing an error at error severity.
+	// PromoteReportedWarnings emits WarnReport calls at error severity.
 	PromoteReportedWarnings bool
 }
 
@@ -71,11 +74,7 @@ func errorKind(err error) string {
 func firstError(args []interface{}) error {
 	for _, a := range args {
 		err, ok := a.(error)
-		if !ok || err == nil {
-			continue
-		}
-		// Ignore error interfaces containing a nil pointer.
-		if v := reflect.ValueOf(err); v.Kind() == reflect.Ptr && v.IsNil() {
+		if !ok || isNilError(err) {
 			continue
 		}
 		return err
@@ -83,14 +82,41 @@ func firstError(args []interface{}) error {
 	return nil
 }
 
-// injectIfReport adds Datadog fields from the first error in a reported event.
-func (p provider) injectIfReport(ctx context.Context, report bool, args []interface{}) (context.Context, bool) {
+func isNilError(err error) bool {
+	if err == nil {
+		return true
+	}
+	v := reflect.ValueOf(err)
+	return v.Kind() == reflect.Ptr && v.IsNil()
+}
+
+func reportMessage(args []interface{}) string {
+	filtered := make([]interface{}, 0, len(args))
+	for _, a := range args {
+		if err, ok := a.(error); ok && isNilError(err) {
+			continue
+		}
+		filtered = append(filtered, a)
+	}
+	return fmt.Sprint(filtered...)
+}
+
+// injectIfReport adds Datadog fields from the first error in a reported event,
+// or synthesizes the minimum grouping fields for a string-only report.
+func (p provider) injectIfReport(ctx context.Context, report bool, syntheticKind string, args []interface{}) (context.Context, bool) {
 	if !report {
 		return ctx, false
 	}
 	err := firstError(args)
 	if err == nil {
-		return ctx, false
+		message := reportMessage(args)
+		if message == "" {
+			return ctx, false
+		}
+		return log.ContextWithFields(ctx, log.Fields{
+			FieldErrorKind:    syntheticKind,
+			FieldErrorMessage: message,
+		}), true
 	}
 	// Add a stack to plain errors and preserve existing Merry stacks.
 	wrapped := merry.Wrap(err)
@@ -102,13 +128,13 @@ func (p provider) injectIfReport(ctx context.Context, report bool, args []interf
 }
 
 func (p provider) Error(ctx context.Context, report bool, args ...interface{}) {
-	ctx, _ = p.injectIfReport(ctx, report, args)
+	ctx, _ = p.injectIfReport(ctx, report, KindReportedError, args)
 	p.LogProvider.Error(ctx, report, args...)
 }
 
 func (p provider) Warn(ctx context.Context, report bool, args ...interface{}) {
-	ctx, hasError := p.injectIfReport(ctx, report, args)
-	if report && hasError && p.options.PromoteReportedWarnings {
+	ctx, hasErrorFields := p.injectIfReport(ctx, report, KindReportedWarning, args)
+	if report && hasErrorFields && p.options.PromoteReportedWarnings {
 		p.LogProvider.Error(ctx, report, args...)
 		return
 	}

@@ -25,6 +25,7 @@ func TestReportTrueInjectsField(t *testing.T) {
 	calls := capturer.LogCalls(providers.Error)
 	Expect(calls).To(HaveLen(1))
 	Expect(calls[0].ContextFields).To(HaveKeyWithValue(FieldName, true))
+	Expect(calls[0].ContextFields).To(HaveKeyWithValue(ReportedLevelFieldName, ReportedLevelError))
 }
 
 func TestReportFalseDoesNotInjectField(t *testing.T) {
@@ -39,6 +40,7 @@ func TestReportFalseDoesNotInjectField(t *testing.T) {
 	calls := capturer.LogCalls(providers.Error)
 	Expect(calls).To(HaveLen(1))
 	Expect(calls[0].ContextFields).NotTo(HaveKey(FieldName))
+	Expect(calls[0].ContextFields).NotTo(HaveKey(ReportedLevelFieldName))
 }
 
 // Error/Warn are the reportable levels: report=true tags both. Info/Debug are
@@ -58,10 +60,12 @@ func TestErrorAndWarnLevelsWorkWithReportTrue(t *testing.T) {
 	errorCalls := capturer.LogCalls(providers.Error)
 	Expect(errorCalls).To(HaveLen(1))
 	Expect(errorCalls[0].ContextFields).To(HaveKeyWithValue(FieldName, true))
+	Expect(errorCalls[0].ContextFields).To(HaveKeyWithValue(ReportedLevelFieldName, ReportedLevelError))
 
 	warnCalls := capturer.LogCalls(providers.Warn)
 	Expect(warnCalls).To(HaveLen(1))
 	Expect(warnCalls[0].ContextFields).To(HaveKeyWithValue(FieldName, true))
+	Expect(warnCalls[0].ContextFields).To(HaveKeyWithValue(ReportedLevelFieldName, ReportedLevelWarning))
 }
 
 func TestPreservesExistingFields(t *testing.T) {
@@ -70,7 +74,7 @@ func TestPreservesExistingFields(t *testing.T) {
 	capturer := structured.LogProvider(nil)
 	testProvider := LogProvider(capturer)
 	ctx := log.ContextWithFields(context.Background(), log.Fields{
-		"userId":   "123",
+		"userId":    "123",
 		"requestId": "abc-def",
 	})
 
@@ -81,6 +85,7 @@ func TestPreservesExistingFields(t *testing.T) {
 	Expect(calls[0].ContextFields).To(HaveKeyWithValue("userId", "123"))
 	Expect(calls[0].ContextFields).To(HaveKeyWithValue("requestId", "abc-def"))
 	Expect(calls[0].ContextFields).To(HaveKeyWithValue(FieldName, true))
+	Expect(calls[0].ContextFields).To(HaveKeyWithValue(ReportedLevelFieldName, ReportedLevelError))
 }
 
 func TestRecordDoesNotInjectField(t *testing.T) {
@@ -95,12 +100,14 @@ func TestRecordDoesNotInjectField(t *testing.T) {
 	recordCalls := capturer.RecordCalls()
 	Expect(recordCalls).To(HaveLen(1))
 	Expect(recordCalls[0].ContextFields).NotTo(HaveKey(FieldName))
+	Expect(recordCalls[0].ContextFields).NotTo(HaveKey(ReportedLevelFieldName))
 }
 
 func TestFieldNameConstantIsExported(t *testing.T) {
 	RegisterTestingT(t)
 
 	Expect(FieldName).To(Equal("reportableError"))
+	Expect(ReportedLevelFieldName).To(Equal("reportedLevel"))
 }
 
 // Info/Debug must NOT inject reportableError, even on report=true
@@ -118,6 +125,7 @@ func TestInfoReportDoesNotInjectField(t *testing.T) {
 	calls := capturer.LogCalls(providers.Info)
 	Expect(calls).To(HaveLen(1))
 	Expect(calls[0].ContextFields).NotTo(HaveKey(FieldName))
+	Expect(calls[0].ContextFields).NotTo(HaveKey(ReportedLevelFieldName))
 }
 
 func TestDebugReportDoesNotInjectField(t *testing.T) {
@@ -132,4 +140,5 @@ func TestDebugReportDoesNotInjectField(t *testing.T) {
 	calls := capturer.LogCalls(providers.Debug)
 	Expect(calls).To(HaveLen(1))
 	Expect(calls[0].ContextFields).NotTo(HaveKey(FieldName))
+	Expect(calls[0].ContextFields).NotTo(HaveKey(ReportedLevelFieldName))
 }

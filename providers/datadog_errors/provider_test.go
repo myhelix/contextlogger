@@ -74,11 +74,13 @@ func TestMerryError(t *testing.T) {
 	Expect(out).To(MatchRegexp(`error\.stack=`))
 }
 
-func TestNonErrorArgIgnored(t *testing.T) {
+func TestStringOnlyErrorReportUsesSyntheticFields(t *testing.T) {
 	setup(t)
 
 	testProvider.Error(context.Background(), true, "just a string")
-	Expect(output.String()).NotTo(ContainSubstring("error.kind"))
+	out := output.String()
+	Expect(out).To(MatchRegexp(`error\.kind=ReportedError`))
+	Expect(out).To(MatchRegexp(`error\.message="just a string"`))
 }
 
 func TestWarnReportInjectsAndPreservesWarningSeverityByDefault(t *testing.T) {
@@ -99,13 +101,23 @@ func TestWarnReportCanPromoteErrorSeverity(t *testing.T) {
 	Expect(out).To(MatchRegexp(`error\.message="warn broke"`))
 }
 
-func TestStringOnlyWarnReportIsNotPromoted(t *testing.T) {
+func TestStringOnlyWarnReportIsPromotedWithSyntheticFields(t *testing.T) {
 	setupWithOptions(t, Options{PromoteReportedWarnings: true})
 
 	testProvider.Warn(context.Background(), true, "warning without an error")
 	out := output.String()
+	Expect(out).To(MatchRegexp(`level=error`))
+	Expect(out).To(MatchRegexp(`error\.kind=ReportedWarning`))
+	Expect(out).To(MatchRegexp(`error\.message="warning without an error"`))
+}
+
+func TestStringOnlyWarnReportPreservesWarningSeverityByDefault(t *testing.T) {
+	setup(t)
+
+	testProvider.Warn(context.Background(), true, "warning without an error")
+	out := output.String()
 	Expect(out).To(MatchRegexp(`level=warning`))
-	Expect(out).NotTo(ContainSubstring("error.kind"))
+	Expect(out).To(MatchRegexp(`error\.kind=ReportedWarning`))
 }
 
 func TestNonReportWarnUsesWarningSeverity(t *testing.T) {
