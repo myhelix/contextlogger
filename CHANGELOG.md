@@ -1,3 +1,12 @@
+## 1.11.0 (2026-09-15)
+Features:
+- Add `providers/fixed_fields` for authoritative application identity on logs and metrics.
+- Add stable Datadog Error Tracking grouping fields for message-only reports and optional promotion of `WarnReport` calls to error status.
+- Preserve each report's original severity in `reportedLevel`, including `reportedLevel:warning` when a warning is promoted for Error Tracking.
+
+Compatibility:
+- No public API is removed or changed. Warning promotion remains opt-in, and ordinary `Warn` calls retain warning status.
+
 ## 1.10.1 (2026-09-10)
 Fixes:
 - Add `log.Detach`, to safely hand a context to a goroutine or outbound call that must outlive the current request without risking a race on a context that wraps something reused across requests, like a pooled `*gin.Context`. See LABS-1170.
